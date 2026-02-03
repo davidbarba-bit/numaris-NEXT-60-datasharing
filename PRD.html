@@ -1,0 +1,402 @@
+<h1>PRD: Data Sharing API &amp; Webhooks</h1>
+<p><strong>Feature:</strong> NEXT-60<br><strong>Estado:</strong> Parking lot<br><strong>Prioridad:</strong> Media<br><strong>Fecha:</strong> 2026-02-01  </p>
+<hr>
+<h2>1. Resumen Ejecutivo</h2>
+<p><strong>Data Sharing</strong> permite a los clientes de Next compartir datos de su flota con sistemas externos de forma programática. Incluye tres componentes principales:</p>
+<ol>
+<li><strong>API Keys</strong> - Acceso programático a datos de la plataforma</li>
+<li><strong>Webhooks</strong> - Push de eventos en tiempo real a sistemas externos</li>
+<li><strong>MCP Server</strong> - Integración con LLMs para consultas en lenguaje natural</li>
+</ol>
+<h2>2. Problema</h2>
+<p>Los clientes de plataformas de rastreo necesitan:</p>
+<ul>
+<li>Integrar datos de flota con sus ERPs, CRMs, TMS</li>
+<li>Automatizar flujos de trabajo basados en eventos de telemetría</li>
+<li>Compartir información con clientes finales o socios</li>
+<li>Extraer insights usando herramientas de IA/LLM</li>
+</ul>
+<p>Actualmente no existe forma estándar de:</p>
+<ul>
+<li>Obtener datos programáticamente</li>
+<li>Recibir notificaciones automáticas de eventos</li>
+<li>Consultar la plataforma usando lenguaje natural</li>
+</ul>
+<h2>3. Solución Propuesta</h2>
+<h3>3.1 API Keys Management</h3>
+<p>Sistema de gestión de credenciales API con control granular de acceso.</p>
+<h4>Características:</h4>
+<ul>
+<li>Generación de API keys únicas por cuenta</li>
+<li>Control de permisos por key (lectura, escritura, recursos específicos)</li>
+<li>Restricción por unidades/grupos de unidades</li>
+<li>Expiración configurable</li>
+<li>Registro de uso (último acceso, requests)</li>
+<li>Revocación inmediata</li>
+</ul>
+<h4>Campos de una API Key:</h4>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Descripción</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>key</code></td>
+<td>Token alfanumérico único</td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td>Nombre/comentario descriptivo</td>
+</tr>
+<tr>
+<td><code>permissions</code></td>
+<td>Acciones permitidas (read, write, events, commands)</td>
+</tr>
+<tr>
+<td><code>resources</code></td>
+<td>Recursos accesibles (units, events, zones, etc.)</td>
+</tr>
+<tr>
+<td><code>unit_filter</code></td>
+<td>Unidades o grupos con acceso</td>
+</tr>
+<tr>
+<td><code>expires_at</code></td>
+<td>Fecha de expiración (opcional)</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>Fecha de creación</td>
+</tr>
+<tr>
+<td><code>created_by</code></td>
+<td>Usuario que la creó</td>
+</tr>
+<tr>
+<td><code>last_used_at</code></td>
+<td>Último uso</td>
+</tr>
+<tr>
+<td><code>is_active</code></td>
+<td>Estado activo/inactivo</td>
+</tr>
+</tbody></table>
+<h3>3.2 Webhooks</h3>
+<p>Sistema de notificaciones push para eventos de la plataforma.</p>
+<h4>Características:</h4>
+<ul>
+<li>Configuración de endpoints HTTPS destino</li>
+<li>Filtros por tipo de evento, unidad, severidad</li>
+<li>Reintentos automáticos con backoff exponencial</li>
+<li>Firma HMAC para verificación de autenticidad</li>
+<li>Logs de entregas (éxitos, fallos, latencia)</li>
+<li>Testing manual desde UI</li>
+</ul>
+<h4>Eventos disponibles:</h4>
+<table>
+<thead>
+<tr>
+<th>Evento</th>
+<th>Descripción</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>unit.position</code></td>
+<td>Nueva posición de unidad</td>
+</tr>
+<tr>
+<td><code>unit.status_change</code></td>
+<td>Cambio de estado (ignición, movimiento)</td>
+</tr>
+<tr>
+<td><code>event.created</code></td>
+<td>Nuevo evento/alerta generado</td>
+</tr>
+<tr>
+<td><code>event.acknowledged</code></td>
+<td>Evento reconocido</td>
+</tr>
+<tr>
+<td><code>zone.entry</code></td>
+<td>Entrada a geocerca</td>
+</tr>
+<tr>
+<td><code>zone.exit</code></td>
+<td>Salida de geocerca</td>
+</tr>
+<tr>
+<td><code>command.sent</code></td>
+<td>Comando enviado</td>
+</tr>
+<tr>
+<td><code>command.response</code></td>
+<td>Respuesta de comando</td>
+</tr>
+</tbody></table>
+<h4>Payload de Webhook:</h4>
+<pre><code class="language-json">{
+  &quot;id&quot;: &quot;evt_123abc&quot;,
+  &quot;type&quot;: &quot;event.created&quot;,
+  &quot;timestamp&quot;: &quot;2026-02-01T22:45:00Z&quot;,
+  &quot;account_id&quot;: &quot;acc_xyz&quot;,
+  &quot;data&quot;: {
+    &quot;event_id&quot;: &quot;12345&quot;,
+    &quot;unit_id&quot;: &quot;unit_001&quot;,
+    &quot;unit_name&quot;: &quot;Camión 01&quot;,
+    &quot;event_type&quot;: &quot;panic_button&quot;,
+    &quot;severity&quot;: &quot;critical&quot;,
+    &quot;location&quot;: {
+      &quot;lat&quot;: 19.4326,
+      &quot;lng&quot;: -99.1332
+    },
+    &quot;metadata&quot;: {}
+  },
+  &quot;signature&quot;: &quot;sha256=...&quot;
+}
+</code></pre>
+<h3>3.3 MCP Server (Model Context Protocol)</h3>
+<p>Servidor que permite a LLMs consultar y operar la plataforma usando lenguaje natural.</p>
+<h4>¿Qué es MCP?</h4>
+<p>MCP (Model Context Protocol) es un estándar abierto de Anthropic que permite a los modelos de lenguaje conectarse con fuentes de datos externas de forma segura y estructurada.</p>
+<h4>Recursos expuestos:</h4>
+<table>
+<thead>
+<tr>
+<th>Recurso</th>
+<th>Descripción</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>units</code></td>
+<td>Lista y detalle de unidades</td>
+</tr>
+<tr>
+<td><code>events</code></td>
+<td>Eventos y alertas</td>
+</tr>
+<tr>
+<td><code>positions</code></td>
+<td>Posiciones actuales e históricas</td>
+</tr>
+<tr>
+<td><code>zones</code></td>
+<td>Geocercas configuradas</td>
+</tr>
+<tr>
+<td><code>reports</code></td>
+<td>Reportes generados</td>
+</tr>
+</tbody></table>
+<h4>Herramientas (Tools):</h4>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Descripción</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>get_unit_status</code></td>
+<td>Obtener estado actual de una unidad</td>
+</tr>
+<tr>
+<td><code>list_events</code></td>
+<td>Listar eventos con filtros</td>
+</tr>
+<tr>
+<td><code>get_trip_history</code></td>
+<td>Obtener historial de viajes</td>
+</tr>
+<tr>
+<td><code>send_command</code></td>
+<td>Enviar comando a unidad</td>
+</tr>
+<tr>
+<td><code>generate_report</code></td>
+<td>Generar reporte</td>
+</tr>
+</tbody></table>
+<h4>Ejemplo de interacción:</h4>
+<pre><code>Usuario: &quot;¿Dónde está el camión 01 y cuántos kilómetros recorrió hoy?&quot;
+
+LLM (usando MCP):
+1. Llama get_unit_status(&quot;camion_01&quot;)
+2. Llama get_trip_history(&quot;camion_01&quot;, date=&quot;today&quot;)
+3. Responde: &quot;El Camión 01 está en Av. Insurgentes 1234, CDMX. 
+   Hoy ha recorrido 145 km en 3 viajes.&quot;
+</code></pre>
+<h2>4. Arquitectura Técnica</h2>
+<pre><code>┌─────────────────────────────────────────────────────────┐
+│                    NEXT Platform                         │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐    │
+│  │  REST API   │  │  Webhooks   │  │ MCP Server  │    │
+│  │  Gateway    │  │   Worker    │  │             │    │
+│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘    │
+│         │                │                │            │
+│         └────────────────┼────────────────┘            │
+│                          │                             │
+│                   ┌──────┴──────┐                      │
+│                   │   Auth &amp;    │                      │
+│                   │  Rate Limit │                      │
+│                   └──────┬──────┘                      │
+│                          │                             │
+│                   ┌──────┴──────┐                      │
+│                   │    Core     │                      │
+│                   │   Services  │                      │
+│                   └─────────────┘                      │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+           │                │                │
+           ▼                ▼                ▼
+    ┌──────────┐    ┌──────────┐    ┌──────────┐
+    │  Client  │    │ External │    │   LLM    │
+    │   App    │    │  System  │    │  Agent   │
+    └──────────┘    └──────────┘    └──────────┘
+</code></pre>
+<h2>5. UI/UX</h2>
+<h3>5.1 Sección &quot;Integraciones&quot; en Settings</h3>
+<p><strong>Tabs:</strong></p>
+<ol>
+<li>API Keys</li>
+<li>Webhooks</li>
+<li>MCP / AI</li>
+</ol>
+<h3>5.2 Pantalla API Keys</h3>
+<pre><code>┌─────────────────────────────────────────────────────────┐
+│ API Keys                                    [+ Nueva Key]│
+├─────────────────────────────────────────────────────────┤
+│ ┌─────────────────────────────────────────────────────┐ │
+│ │ 🔑 ERP Integration                                  │ │
+│ │ sk_live_abc...xyz                     [Copiar]      │ │
+│ │ Permisos: read:units, read:events                   │ │
+│ │ Último uso: hace 5 minutos            [⚙️] [🗑️]    │ │
+│ └─────────────────────────────────────────────────────┘ │
+│ ┌─────────────────────────────────────────────────────┐ │
+│ │ 🔑 Dashboard Público                                │ │
+│ │ sk_live_def...uvw                     [Copiar]      │ │
+│ │ Permisos: read:positions (5 unidades)              │ │
+│ │ Último uso: hace 2 horas              [⚙️] [🗑️]    │ │
+│ └─────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────┘
+</code></pre>
+<h3>5.3 Pantalla Webhooks</h3>
+<pre><code>┌─────────────────────────────────────────────────────────┐
+│ Webhooks                                  [+ Nuevo Hook]│
+├─────────────────────────────────────────────────────────┤
+│ ┌─────────────────────────────────────────────────────┐ │
+│ │ 🔗 Slack Alerts                          ● Activo   │ │
+│ │ https://hooks.slack.com/services/...               │ │
+│ │ Eventos: event.created (severity=critical)         │ │
+│ │ Entregas: 145 ✓  3 ✗           [Test] [⚙️] [🗑️]   │ │
+│ └─────────────────────────────────────────────────────┘ │
+│ ┌─────────────────────────────────────────────────────┐ │
+│ │ 🔗 ERP Sync                              ● Activo   │ │
+│ │ https://api.erp.com/webhooks/fleet                 │ │
+│ │ Eventos: unit.position, zone.entry, zone.exit      │ │
+│ │ Entregas: 12,847 ✓  12 ✗       [Test] [⚙️] [🗑️]   │ │
+│ └─────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────┘
+</code></pre>
+<h2>6. Seguridad</h2>
+<h3>API Keys</h3>
+<ul>
+<li>Tokens con prefijo identificable (<code>sk_live_</code>, <code>sk_test_</code>)</li>
+<li>Hashing seguro en base de datos (solo se muestra completo 1 vez)</li>
+<li>Rate limiting por key (configurable)</li>
+<li>IP allowlist opcional</li>
+</ul>
+<h3>Webhooks</h3>
+<ul>
+<li>Solo HTTPS</li>
+<li>Firma HMAC-SHA256 en header <code>X-Next-Signature</code></li>
+<li>Secret por webhook para verificación</li>
+<li>Timeout de 30 segundos</li>
+<li>Retry con backoff: 1s, 5s, 30s, 5min, 30min</li>
+</ul>
+<h3>MCP Server</h3>
+<ul>
+<li>Autenticación OAuth2 o API Key</li>
+<li>Scopes granulares por recurso</li>
+<li>Audit log de todas las operaciones</li>
+<li>Rate limiting por sesión</li>
+</ul>
+<h2>7. Fases de Implementación</h2>
+<h3>Fase 1 - API Keys (4 semanas)</h3>
+<ul>
+<li>CRUD de API Keys</li>
+<li>Autenticación en endpoints existentes</li>
+<li>Dashboard de gestión</li>
+<li>Rate limiting básico</li>
+</ul>
+<h3>Fase 2 - Webhooks (4 semanas)</h3>
+<ul>
+<li>Configuración de webhooks</li>
+<li>Worker de entrega</li>
+<li>Reintentos y logs</li>
+<li>UI de gestión y testing</li>
+</ul>
+<h3>Fase 3 - MCP Server (6 semanas)</h3>
+<ul>
+<li>Implementación del servidor MCP</li>
+<li>Recursos: units, events, positions</li>
+<li>Tools básicos: get_status, list_events</li>
+<li>Documentación para integradores</li>
+</ul>
+<h3>Fase 4 - Mejoras (ongoing)</h3>
+<ul>
+<li>Más eventos para webhooks</li>
+<li>Más tools para MCP</li>
+<li>Métricas y analytics de uso</li>
+<li>SDK en lenguajes populares</li>
+</ul>
+<h2>8. Métricas de Éxito</h2>
+<table>
+<thead>
+<tr>
+<th>Métrica</th>
+<th>Objetivo</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>API Keys creadas</td>
+<td>50+ en primer mes</td>
+</tr>
+<tr>
+<td>Webhooks configurados</td>
+<td>30+ en primer mes</td>
+</tr>
+<tr>
+<td>Requests API/día</td>
+<td>10,000+</td>
+</tr>
+<tr>
+<td>Webhook delivery rate</td>
+<td>&gt; 99%</td>
+</tr>
+<tr>
+<td>Latencia P95</td>
+<td>&lt; 200ms</td>
+</tr>
+</tbody></table>
+<h2>9. Competencia (Referencia MAPON)</h2>
+<p>MAPON ofrece:</p>
+<ul>
+<li>API Keys con control de acceso por vehículo/grupo</li>
+<li>Webhooks para eventos</li>
+<li>Documentación completa</li>
+<li>No tienen MCP (oportunidad de diferenciación)</li>
+</ul>
+<h2>10. Referencias</h2>
+<ul>
+<li>Prototipo Replit: <a href="https://saa-s-flow-forge-davidbarba2.replit.app">https://saa-s-flow-forge-davidbarba2.replit.app</a> (offline)</li>
+<li>MAPON API: <a href="https://www.mapon.com/es/soluciones-gestion-de-flota/automatizacion-de-procesos/integraciones-api">https://www.mapon.com/es/soluciones-gestion-de-flota/automatizacion-de-procesos/integraciones-api</a></li>
+<li>MCP Spec: <a href="https://modelcontextprotocol.io/">https://modelcontextprotocol.io/</a></li>
+<li>Video referencia: <a href="https://youtu.be/bNbZl6Bk4pc?t=2583">https://youtu.be/bNbZl6Bk4pc?t=2583</a></li>
+</ul>
+<hr>
+<p><em>Documento generado por Jimmy - Asistente de David Barba</em><br><em>Última actualización: 2026-02-01</em></p>
+
