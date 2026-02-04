@@ -34,7 +34,7 @@
 <body>
 <div id="root"></div>
 <script>
-var e = React.createElement, useState = React.useState;
+var e = React.createElement, useState = React.useState, useEffect = React.useEffect;
 var Layout = antd.Layout, Menu = antd.Menu, Button = antd.Button, Card = antd.Card, Table = antd.Table, Tag = antd.Tag, Space = antd.Space, Typography = antd.Typography, Statistic = antd.Statistic, Modal = antd.Modal, Form = antd.Form, Input = antd.Input, Select = antd.Select, Checkbox = antd.Checkbox, Switch = antd.Switch, Tooltip = antd.Tooltip, Breadcrumb = antd.Breadcrumb, Row = antd.Row, Col = antd.Col, Alert = antd.Alert, message = antd.message, ConfigProvider = antd.ConfigProvider, Popconfirm = antd.Popconfirm, Divider = antd.Divider, Tabs = antd.Tabs, Spin = antd.Spin, Result = antd.Result;
 var Header = Layout.Header, Sider = Layout.Sider, Content = Layout.Content;
 var Title = Typography.Title, Text = Typography.Text, Paragraph = Typography.Paragraph;
@@ -72,7 +72,6 @@ function App() {
   var _keys = _s(apiKeysData), keys = _keys[0], setKeys = _keys[1];
   var _whOut = _s(webhooksOutData), whOut = _whOut[0], setWhOut = _whOut[1];
   var _whIn = _s(webhooksInData), whIn = _whIn[0], setWhIn = _whIn[1];
-  var _urlErr = _s(''), urlErr = _urlErr[0], setUrlErr = _urlErr[1];
   var _accessType = _s('all'), accessType = _accessType[0], setAccessType = _accessType[1];
   var _filterType = _s('all'), filterType = _filterType[0], setFilterType = _filterType[1];
   var _logFilter = _s('all'), logFilter = _logFilter[0], setLogFilter = _logFilter[1];
@@ -83,8 +82,36 @@ function App() {
   var _testResult = _s(null), testResult = _testResult[0], setTestResult = _testResult[1];
   var _connModal = _s(null), connModal = _connModal[0], setConnModal = _connModal[1];
 
-  function validateUrl(u) { if (!u) return ''; if (!u.startsWith('https://')) return 'Debe ser HTTPS'; try { new URL(u); return ''; } catch(e) { return 'URL inválida'; } }
-  function resetForm() { setAccessType('all'); setFilterType('all'); setUrlErr(''); }
+  // Form instances para validación real
+  var _apiKeyForm = Form.useForm(), apiKeyForm = _apiKeyForm[0];
+  var _webhookOutForm = Form.useForm(), webhookOutForm = _webhookOutForm[0];
+  var _webhookInForm = Form.useForm(), webhookInForm = _webhookInForm[0];
+  var _editApiKeyForm = Form.useForm(), editApiKeyForm = _editApiKeyForm[0];
+  var _editWhOutForm = Form.useForm(), editWhOutForm = _editWhOutForm[0];
+  var _editWhInForm = Form.useForm(), editWhInForm = _editWhInForm[0];
+  var _connForm = Form.useForm(), connForm = _connForm[0];
+
+  function resetForms() {
+    setAccessType('all');
+    setFilterType('all');
+    apiKeyForm.resetFields();
+    webhookOutForm.resetFields();
+    webhookInForm.resetFields();
+  }
+
+  function closeModal() {
+    setModalOpen(null);
+    setEditItem(null);
+    resetForms();
+  }
+
+  // Validador HTTPS custom
+  function validateHttps(_, value) {
+    if (!value) return Promise.reject('La URL es obligatoria');
+    if (!value.startsWith('https://')) return Promise.reject('Debe comenzar con https://');
+    try { new URL(value); return Promise.resolve(); } 
+    catch (e) { return Promise.reject('URL inválida'); }
+  }
 
   var menuItems = [
     { key: 'g1', type: 'group', label: 'Integraciones' },
@@ -100,11 +127,11 @@ function App() {
   ];
 
   function renderApiKeys() {
-    if (!keys.length) return e('div', {className:'empty-state'}, e(KeyOutlined, {style:{fontSize:48,color:'#d9d9d9'}}), e(Title, {level:4,style:{color:'#8c8c8c'}}, 'No hay API Keys'), e(Button, {type:'primary', icon:e(PlusOutlined), onClick:function(){setModalOpen('api-key');resetForm();}}, 'Crear API Key'));
+    if (!keys.length) return e('div', {className:'empty-state'}, e(KeyOutlined, {style:{fontSize:48,color:'#d9d9d9'}}), e(Title, {level:4,style:{color:'#8c8c8c'}}, 'No hay API Keys'), e(Button, {type:'primary', icon:e(PlusOutlined), onClick:function(){setModalOpen('api-key');resetForms();}}, 'Crear API Key'));
     return e('div', null,
       e('div', {style:{marginBottom:24,display:'flex',justifyContent:'space-between'}},
         e('div', null, e(Title, {level:4,style:{margin:0}}, 'API Keys'), e(Text, {type:'secondary'}, 'Tokens de acceso para aplicaciones externas')),
-        e(Button, {type:'primary', icon:e(PlusOutlined), onClick:function(){setModalOpen('api-key');resetForm();}}, 'Nueva API Key')
+        e(Button, {type:'primary', icon:e(PlusOutlined), onClick:function(){setModalOpen('api-key');resetForms();}}, 'Nueva API Key')
       ),
       e(Space, {direction:'vertical', style:{width:'100%'}, size:16}, keys.map(function(item) {
         return e(Card, {key:item.key},
@@ -120,7 +147,7 @@ function App() {
             ),
             e(Space, null,
               e(Tooltip, {title:'Regenerar'}, e(Button, {icon:e(ReloadOutlined), onClick:function(){message.success('Token regenerado');Modal.info({title:'Nuevo Token',content:e('code',{style:{display:'block',padding:12,background:'#f5f5f5',borderRadius:4}},'sk_live_'+Math.random().toString(36).substr(2,20))});}})),
-              e(Tooltip, {title:'Configurar'}, e(Button, {icon:e(SettingOutlined), onClick:function(){setEditItem(item);setAccessType(item.scopeType||'all');setModalOpen('edit-api-key');}})),
+              e(Tooltip, {title:'Configurar'}, e(Button, {icon:e(SettingOutlined), onClick:function(){setEditItem(item);setAccessType(item.scopeType||'all');editApiKeyForm.setFieldsValue({name:item.name,accessType:item.scopeType||'all',group:item.scopeValue});setModalOpen('edit-api-key');}})),
               e(Popconfirm, {title:'¿Eliminar?',onConfirm:function(){setKeys(keys.filter(function(k){return k.key!==item.key;}));message.success('Eliminada');}}, e(Button, {icon:e(DeleteOutlined),danger:true}))
             )
           )
@@ -130,12 +157,12 @@ function App() {
   }
 
   function renderWebhooksOut() {
-    if (!whOut.length) return e('div', {className:'empty-state'}, e(ShareAltOutlined, {style:{fontSize:48,color:'#d9d9d9'}}), e(Title, {level:4,style:{color:'#8c8c8c'}}, 'No hay Webhooks'), e(Button, {type:'primary', icon:e(PlusOutlined), onClick:function(){setModalOpen('webhook-out');resetForm();}}, 'Crear Webhook'));
+    if (!whOut.length) return e('div', {className:'empty-state'}, e(ShareAltOutlined, {style:{fontSize:48,color:'#d9d9d9'}}), e(Title, {level:4,style:{color:'#8c8c8c'}}, 'No hay Webhooks'), e(Button, {type:'primary', icon:e(PlusOutlined), onClick:function(){setModalOpen('webhook-out');resetForms();}}, 'Crear Webhook'));
     var icons = {'1':SlackOutlined,'2':DatabaseOutlined,'3':BankOutlined};
     return e('div', null,
       e('div', {style:{marginBottom:24,display:'flex',justifyContent:'space-between'}},
         e('div', null, e(Title, {level:4,style:{margin:0}}, 'Webhooks Salientes'), e(Text, {type:'secondary'}, 'Envía eventos a sistemas externos')),
-        e(Button, {type:'primary', icon:e(PlusOutlined), onClick:function(){setModalOpen('webhook-out');resetForm();}}, 'Nuevo Webhook')
+        e(Button, {type:'primary', icon:e(PlusOutlined), onClick:function(){setModalOpen('webhook-out');resetForms();}}, 'Nuevo Webhook')
       ),
       e(Space, {direction:'vertical', style:{width:'100%'}, size:16}, whOut.map(function(item) {
         var Icon = icons[item.key] || DatabaseOutlined;
@@ -153,7 +180,7 @@ function App() {
             e(Space, null,
               e(Switch, {defaultChecked:item.active}),
               e(Tooltip, {title:'Probar'}, e(Button, {icon:e(PlayCircleOutlined), onClick:function(){setTestWh(item);setTestResult(null);setModalOpen('test-webhook');}})),
-              e(Tooltip, {title:'Configurar'}, e(Button, {icon:e(SettingOutlined), onClick:function(){setEditItem(item);setFilterType(item.filterType||'all');setModalOpen('edit-webhook-out');}})),
+              e(Tooltip, {title:'Configurar'}, e(Button, {icon:e(SettingOutlined), onClick:function(){setEditItem(item);setFilterType(item.filterType||'all');editWhOutForm.setFieldsValue({name:item.name,url:item.url,filterType:item.filterType||'all',group:item.filterValue});setModalOpen('edit-webhook-out');}})),
               e(Popconfirm, {title:'¿Eliminar?',onConfirm:function(){setWhOut(whOut.filter(function(w){return w.key!==item.key;}));message.success('Eliminado');}}, e(Button, {icon:e(DeleteOutlined),danger:true}))
             )
           )
@@ -163,11 +190,11 @@ function App() {
   }
 
   function renderWebhooksIn() {
-    if (!whIn.length) return e('div', {className:'empty-state'}, e(ApiOutlined, {style:{fontSize:48,color:'#d9d9d9'}}), e(Title, {level:4,style:{color:'#8c8c8c'}}, 'No hay Endpoints'), e(Button, {type:'primary', icon:e(PlusOutlined), onClick:function(){setModalOpen('webhook-in');}}, 'Crear Endpoint'));
+    if (!whIn.length) return e('div', {className:'empty-state'}, e(ApiOutlined, {style:{fontSize:48,color:'#d9d9d9'}}), e(Title, {level:4,style:{color:'#8c8c8c'}}, 'No hay Endpoints'), e(Button, {type:'primary', icon:e(PlusOutlined), onClick:function(){setModalOpen('webhook-in');resetForms();}}, 'Crear Endpoint'));
     return e('div', null,
       e('div', {style:{marginBottom:24,display:'flex',justifyContent:'space-between'}},
         e('div', null, e(Title, {level:4,style:{margin:0}}, 'Webhooks Entrantes'), e(Text, {type:'secondary'}, 'Recibe datos de sistemas externos')),
-        e(Button, {type:'primary', icon:e(PlusOutlined), onClick:function(){setModalOpen('webhook-in');}}, 'Nuevo Endpoint')
+        e(Button, {type:'primary', icon:e(PlusOutlined), onClick:function(){setModalOpen('webhook-in');resetForms();}}, 'Nuevo Endpoint')
       ),
       e(Alert, {message:'Los datos recibidos se vinculan automáticamente con tus unidades.', type:'info', showIcon:true, style:{marginBottom:16}}),
       e(Space, {direction:'vertical', style:{width:'100%'}, size:16}, whIn.map(function(item) {
@@ -184,7 +211,7 @@ function App() {
             ),
             e(Space, null,
               e(Switch, {defaultChecked:item.active}),
-              e(Tooltip, {title:'Configurar'}, e(Button, {icon:e(SettingOutlined), onClick:function(){setEditItem(item);setModalOpen('edit-webhook-in');}})),
+              e(Tooltip, {title:'Configurar'}, e(Button, {icon:e(SettingOutlined), onClick:function(){setEditItem(item);editWhInForm.setFieldsValue({name:item.name,linkBy:item.linkBy==='Placa'?'plate':'other'});setModalOpen('edit-webhook-in');}})),
               e(Popconfirm, {title:'¿Eliminar?',onConfirm:function(){setWhIn(whIn.filter(function(w){return w.key!==item.key;}));message.success('Eliminado');}}, e(Button, {icon:e(DeleteOutlined),danger:true}))
             )
           )
@@ -233,7 +260,7 @@ function App() {
             ),
             e(Title, {level:5,style:{margin:0}}, c.name),
             e(Text, {type:'secondary'}, c.desc),
-            e(Button, {block:true, style:{marginTop:16}, type:c.connected?'default':'primary', onClick:function(){setConnModal(c);}}, c.connected ? 'Configurar' : 'Conectar')
+            e(Button, {block:true, style:{marginTop:16}, type:c.connected?'default':'primary', onClick:function(){setConnModal(c);connForm.resetFields();}}, c.connected ? 'Configurar' : 'Conectar')
           ));
         }),
         e(Col, {span:8}, e(Card, {style:{border:'2px dashed #d9d9d9'}},
@@ -321,6 +348,75 @@ function App() {
     }
   }
 
+  // ===== HANDLERS CON VALIDACIÓN REAL =====
+  function handleCreateApiKey() {
+    apiKeyForm.validateFields().then(function(values) {
+      message.success('API Key "' + values.name + '" creada');
+      closeModal();
+    }).catch(function(err) {
+      console.log('Validación fallida:', err);
+    });
+  }
+
+  function handleCreateWebhookOut() {
+    webhookOutForm.validateFields().then(function(values) {
+      message.success('Webhook "' + values.name + '" creado');
+      closeModal();
+    }).catch(function(err) {
+      console.log('Validación fallida:', err);
+    });
+  }
+
+  function handleCreateWebhookIn() {
+    webhookInForm.validateFields().then(function(values) {
+      message.success('Endpoint "' + values.name + '" creado');
+      closeModal();
+    }).catch(function(err) {
+      console.log('Validación fallida:', err);
+    });
+  }
+
+  function handleEditApiKey() {
+    editApiKeyForm.validateFields().then(function(values) {
+      message.success('API Key actualizada');
+      closeModal();
+    }).catch(function(err) {
+      console.log('Validación fallida:', err);
+    });
+  }
+
+  function handleEditWebhookOut() {
+    editWhOutForm.validateFields().then(function(values) {
+      message.success('Webhook actualizado');
+      closeModal();
+    }).catch(function(err) {
+      console.log('Validación fallida:', err);
+    });
+  }
+
+  function handleEditWebhookIn() {
+    editWhInForm.validateFields().then(function(values) {
+      message.success('Endpoint actualizado');
+      closeModal();
+    }).catch(function(err) {
+      console.log('Validación fallida:', err);
+    });
+  }
+
+  function handleConnection() {
+    if (connModal && connModal.connected) {
+      connForm.validateFields().then(function(values) {
+        message.success('Configuración guardada');
+        setConnModal(null);
+      }).catch(function(err) {
+        console.log('Validación fallida:', err);
+      });
+    } else {
+      message.success('Redirigiendo a ' + (connModal ? connModal.name : '') + '...');
+      setConnModal(null);
+    }
+  }
+
   return e(ConfigProvider, {theme:theme},
     e(Layout, {style:{minHeight:'100vh'}},
       e(Sider, {width:250, theme:'light'},
@@ -337,10 +433,10 @@ function App() {
     ),
 
     // Modal: Nueva Integración
-    e(Modal, {title:'Nueva Integración', open:modalOpen==='new', onCancel:function(){setModalOpen(null);}, footer:null, width:480},
+    e(Modal, {title:'Nueva Integración', open:modalOpen==='new', onCancel:closeModal, footer:null, width:480},
       e(Space, {direction:'vertical', style:{width:'100%'}, size:12},
         [{key:'api-key',icon:KeyOutlined,color:'#1867FF',title:'API Key',desc:'Acceso programático'},{key:'webhook-out',icon:ShareAltOutlined,color:'#52c41a',title:'Webhook Saliente',desc:'Enviar eventos'},{key:'webhook-in',icon:ApiOutlined,color:'#722ed1',title:'Webhook Entrante',desc:'Recibir datos'}].map(function(i){
-          return e('div', {key:i.key, onClick:function(){setModalOpen(i.key);resetForm();}, style:{display:'flex',alignItems:'center',padding:16,border:'1px solid #d9d9d9',borderRadius:8,cursor:'pointer'}},
+          return e('div', {key:i.key, onClick:function(){setModalOpen(i.key);resetForms();}, style:{display:'flex',alignItems:'center',padding:16,border:'1px solid #d9d9d9',borderRadius:8,cursor:'pointer'}},
             e('div', {style:{width:40,height:40,background:i.color+'20',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',color:i.color}}, e(i.icon)),
             e('div', {style:{marginLeft:16}}, e(Text, {strong:true}, i.title), e('br'), e(Text, {type:'secondary'}, i.desc))
           );
@@ -348,49 +444,68 @@ function App() {
       )
     ),
 
-    // Modal: Nueva API Key (con campos condicionales)
-    e(Modal, {title:'Nueva API Key', open:modalOpen==='api-key', onCancel:function(){setModalOpen(null);}, onOk:function(){message.success('API Key creada');setModalOpen(null);}, okText:'Crear', width:520},
-      e(Form, {layout:'vertical'},
-        e(Form.Item, {label:'Nombre', required:true}, e(Input, {placeholder:'ej: Dashboard Power BI'})),
-        e(Form.Item, {label:'Permisos'}, e(Checkbox.Group, {options:['Leer unidades','Leer posiciones','Leer eventos','Leer historial','Enviar comandos'], defaultValue:['Leer unidades','Leer posiciones']})),
-        e(Form.Item, {label:'Acceso a unidades'}, e(Select, {value:accessType, onChange:setAccessType, options:[{value:'all',label:'Todas las unidades'},{value:'group',label:'Grupo específico...'},{value:'units',label:'Unidades específicas...'}]})),
-        accessType === 'group' && e(Form.Item, {label:'Seleccionar grupo'}, e(Select, {placeholder:'Elige un grupo', options:mockGroups})),
-        accessType === 'units' && e(Form.Item, {label:'Seleccionar unidades'}, e(Select, {mode:'multiple', placeholder:'Elige unidades', options:mockUnits})),
-        e(Form.Item, {label:'Expiración'}, e(Select, {defaultValue:'never', options:[{value:'never',label:'Sin expiración'},{value:'30d',label:'30 días'},{value:'90d',label:'90 días'},{value:'1y',label:'1 año'}]}))
+    // Modal: Nueva API Key (CON VALIDACIÓN REAL)
+    e(Modal, {title:'Nueva API Key', open:modalOpen==='api-key', onCancel:closeModal, onOk:handleCreateApiKey, okText:'Crear', width:520},
+      e(Form, {form:apiKeyForm, layout:'vertical'},
+        e(Form.Item, {name:'name', label:'Nombre', rules:[{required:true, message:'El nombre es obligatorio'}, {min:3, message:'Mínimo 3 caracteres'}]}, 
+          e(Input, {placeholder:'ej: Dashboard Power BI'})),
+        e(Form.Item, {name:'permissions', label:'Permisos', rules:[{required:true, message:'Selecciona al menos un permiso'}]}, 
+          e(Checkbox.Group, {options:['Leer unidades','Leer posiciones','Leer eventos','Leer historial','Enviar comandos']})),
+        e(Form.Item, {name:'accessType', label:'Acceso a unidades', initialValue:'all'}, 
+          e(Select, {value:accessType, onChange:function(v){setAccessType(v);apiKeyForm.setFieldValue('accessType',v);}, options:[{value:'all',label:'Todas las unidades'},{value:'group',label:'Grupo específico...'},{value:'units',label:'Unidades específicas...'}]})),
+        accessType === 'group' && e(Form.Item, {name:'group', label:'Seleccionar grupo', rules:[{required:true, message:'Selecciona un grupo'}]}, 
+          e(Select, {placeholder:'Elige un grupo', options:mockGroups})),
+        accessType === 'units' && e(Form.Item, {name:'units', label:'Seleccionar unidades', rules:[{required:true, message:'Selecciona al menos una unidad'}]}, 
+          e(Select, {mode:'multiple', placeholder:'Elige unidades', options:mockUnits})),
+        e(Form.Item, {name:'expiration', label:'Expiración', initialValue:'never'}, 
+          e(Select, {options:[{value:'never',label:'Sin expiración'},{value:'30d',label:'30 días'},{value:'90d',label:'90 días'},{value:'1y',label:'1 año'}]}))
       )
     ),
 
     // Modal: Editar API Key
-    e(Modal, {title:'Editar API Key', open:modalOpen==='edit-api-key', onCancel:function(){setModalOpen(null);setEditItem(null);}, onOk:function(){message.success('Guardado');setModalOpen(null);}, okText:'Guardar', width:520},
-      editItem && e(Form, {layout:'vertical'},
-        e(Form.Item, {label:'Nombre'}, e(Input, {defaultValue:editItem.name})),
-        e(Form.Item, {label:'Acceso a unidades'}, e(Select, {value:accessType, onChange:setAccessType, options:[{value:'all',label:'Todas las unidades'},{value:'group',label:'Grupo específico...'},{value:'units',label:'Unidades específicas...'}]})),
-        accessType === 'group' && e(Form.Item, {label:'Seleccionar grupo'}, e(Select, {defaultValue:editItem.scopeValue, options:mockGroups})),
-        accessType === 'units' && e(Form.Item, {label:'Seleccionar unidades'}, e(Select, {mode:'multiple', options:mockUnits}))
+    e(Modal, {title:'Editar API Key', open:modalOpen==='edit-api-key', onCancel:closeModal, onOk:handleEditApiKey, okText:'Guardar', width:520},
+      e(Form, {form:editApiKeyForm, layout:'vertical'},
+        e(Form.Item, {name:'name', label:'Nombre', rules:[{required:true, message:'El nombre es obligatorio'}]}, 
+          e(Input)),
+        e(Form.Item, {name:'accessType', label:'Acceso a unidades'}, 
+          e(Select, {value:accessType, onChange:function(v){setAccessType(v);editApiKeyForm.setFieldValue('accessType',v);}, options:[{value:'all',label:'Todas'},{value:'group',label:'Grupo específico...'}]})),
+        accessType === 'group' && e(Form.Item, {name:'group', label:'Grupo', rules:[{required:true, message:'Selecciona un grupo'}]}, 
+          e(Select, {options:mockGroups}))
       )
     ),
 
-    // Modal: Nuevo Webhook Out (con campos condicionales)
-    e(Modal, {title:'Nuevo Webhook Saliente', open:modalOpen==='webhook-out', onCancel:function(){setModalOpen(null);}, onOk:function(){if(!urlErr){message.success('Webhook creado');setModalOpen(null);}}, okText:'Crear', width:560},
-      e(Form, {layout:'vertical'},
-        e(Form.Item, {label:'Nombre', required:true}, e(Input, {placeholder:'ej: Alertas → Slack'})),
-        e(Form.Item, {label:'URL (HTTPS)', required:true, validateStatus:urlErr?'error':'', help:urlErr}, e(Input, {placeholder:'https://...', onChange:function(ev){setUrlErr(validateUrl(ev.target.value));}})),
-        e(Form.Item, {label:'Eventos'}, e(Checkbox.Group, {options:['position_update','panic_button','speeding','zone_entry','zone_exit','ignition_change'], defaultValue:['panic_button','speeding']})),
-        e(Form.Item, {label:'Filtrar unidades'}, e(Select, {value:filterType, onChange:setFilterType, options:[{value:'all',label:'Todas las unidades'},{value:'group',label:'Grupo específico...'}]})),
-        filterType === 'group' && e(Form.Item, {label:'Seleccionar grupo'}, e(Select, {placeholder:'Elige un grupo', options:mockGroups})),
+    // Modal: Nuevo Webhook Out (CON VALIDACIÓN REAL)
+    e(Modal, {title:'Nuevo Webhook Saliente', open:modalOpen==='webhook-out', onCancel:closeModal, onOk:handleCreateWebhookOut, okText:'Crear', width:560},
+      e(Form, {form:webhookOutForm, layout:'vertical'},
+        e(Form.Item, {name:'name', label:'Nombre', rules:[{required:true, message:'El nombre es obligatorio'}, {min:3, message:'Mínimo 3 caracteres'}]}, 
+          e(Input, {placeholder:'ej: Alertas → Slack'})),
+        e(Form.Item, {name:'url', label:'URL (HTTPS)', rules:[{required:true, message:'La URL es obligatoria'}, {validator:validateHttps}]}, 
+          e(Input, {placeholder:'https://...'})),
+        e(Form.Item, {name:'events', label:'Eventos', rules:[{required:true, message:'Selecciona al menos un evento'}]}, 
+          e(Checkbox.Group, {options:['position_update','panic_button','speeding','zone_entry','zone_exit','ignition_change']})),
+        e(Form.Item, {name:'filterType', label:'Filtrar unidades', initialValue:'all'}, 
+          e(Select, {value:filterType, onChange:function(v){setFilterType(v);webhookOutForm.setFieldValue('filterType',v);}, options:[{value:'all',label:'Todas las unidades'},{value:'group',label:'Grupo específico...'}]})),
+        filterType === 'group' && e(Form.Item, {name:'group', label:'Seleccionar grupo', rules:[{required:true, message:'Selecciona un grupo'}]}, 
+          e(Select, {placeholder:'Elige un grupo', options:mockGroups})),
         e(Divider),
-        e(Form.Item, {label:'Seguridad'}, e(Checkbox, {defaultChecked:true}, 'Habilitar firma HMAC-SHA256')),
-        e(Form.Item, {label:'Reintentos'}, e(Select, {defaultValue:'3', style:{width:200}, options:[{value:'0',label:'Sin reintentos'},{value:'3',label:'3 reintentos'},{value:'5',label:'5 reintentos'}]}))
+        e(Form.Item, {name:'hmac', label:'Seguridad', valuePropName:'checked', initialValue:true}, 
+          e(Checkbox, null, 'Habilitar firma HMAC-SHA256')),
+        e(Form.Item, {name:'retries', label:'Reintentos', initialValue:'3'}, 
+          e(Select, {style:{width:200}, options:[{value:'0',label:'Sin reintentos'},{value:'3',label:'3 reintentos'},{value:'5',label:'5 reintentos'}]}))
       )
     ),
 
     // Modal: Editar Webhook Out
-    e(Modal, {title:'Editar Webhook', open:modalOpen==='edit-webhook-out', onCancel:function(){setModalOpen(null);setEditItem(null);}, onOk:function(){message.success('Guardado');setModalOpen(null);}, okText:'Guardar', width:560},
-      editItem && e(Form, {layout:'vertical'},
-        e(Form.Item, {label:'Nombre'}, e(Input, {defaultValue:editItem.name})),
-        e(Form.Item, {label:'URL'}, e(Input, {defaultValue:editItem.url})),
-        e(Form.Item, {label:'Filtrar unidades'}, e(Select, {value:filterType, onChange:setFilterType, options:[{value:'all',label:'Todas'},{value:'group',label:'Grupo específico...'}]})),
-        filterType === 'group' && e(Form.Item, {label:'Grupo'}, e(Select, {defaultValue:editItem.filterValue, options:mockGroups}))
+    e(Modal, {title:'Editar Webhook', open:modalOpen==='edit-webhook-out', onCancel:closeModal, onOk:handleEditWebhookOut, okText:'Guardar', width:560},
+      e(Form, {form:editWhOutForm, layout:'vertical'},
+        e(Form.Item, {name:'name', label:'Nombre', rules:[{required:true, message:'El nombre es obligatorio'}]}, 
+          e(Input)),
+        e(Form.Item, {name:'url', label:'URL', rules:[{required:true, message:'La URL es obligatoria'}, {validator:validateHttps}]}, 
+          e(Input)),
+        e(Form.Item, {name:'filterType', label:'Filtrar unidades'}, 
+          e(Select, {value:filterType, onChange:function(v){setFilterType(v);editWhOutForm.setFieldValue('filterType',v);}, options:[{value:'all',label:'Todas'},{value:'group',label:'Grupo específico...'}]})),
+        filterType === 'group' && e(Form.Item, {name:'group', label:'Grupo', rules:[{required:true, message:'Selecciona un grupo'}]}, 
+          e(Select, {options:mockGroups}))
       )
     ),
 
@@ -418,32 +533,39 @@ function App() {
       )
     ),
 
-    // Modal: Nuevo Webhook In
-    e(Modal, {title:'Nuevo Webhook Entrante', open:modalOpen==='webhook-in', onCancel:function(){setModalOpen(null);}, onOk:function(){message.success('Endpoint creado');setModalOpen(null);}, okText:'Crear', width:520},
-      e(Form, {layout:'vertical'},
-        e(Form.Item, {label:'Nombre', required:true}, e(Input, {placeholder:'ej: Órdenes de SAP'})),
-        e(Form.Item, {label:'Tipo de datos'}, e(Select, {defaultValue:'orders', options:[{value:'orders',label:'Órdenes de entrega'},{value:'routes',label:'Rutas'},{value:'drivers',label:'Conductores'},{value:'custom',label:'Custom JSON'}]})),
-        e(Form.Item, {label:'Vincular por'}, e(Select, {defaultValue:'plate', options:[{value:'plate',label:'Placa'},{value:'id',label:'ID unidad'},{value:'economic',label:'Número económico'}]})),
+    // Modal: Nuevo Webhook In (CON VALIDACIÓN REAL)
+    e(Modal, {title:'Nuevo Webhook Entrante', open:modalOpen==='webhook-in', onCancel:closeModal, onOk:handleCreateWebhookIn, okText:'Crear', width:520},
+      e(Form, {form:webhookInForm, layout:'vertical'},
+        e(Form.Item, {name:'name', label:'Nombre', rules:[{required:true, message:'El nombre es obligatorio'}, {min:3, message:'Mínimo 3 caracteres'}]}, 
+          e(Input, {placeholder:'ej: Órdenes de SAP'})),
+        e(Form.Item, {name:'dataType', label:'Tipo de datos', initialValue:'orders', rules:[{required:true}]}, 
+          e(Select, {options:[{value:'orders',label:'Órdenes de entrega'},{value:'routes',label:'Rutas'},{value:'drivers',label:'Conductores'},{value:'custom',label:'Custom JSON'}]})),
+        e(Form.Item, {name:'linkBy', label:'Vincular por', initialValue:'plate', rules:[{required:true}]}, 
+          e(Select, {options:[{value:'plate',label:'Placa'},{value:'id',label:'ID unidad'},{value:'economic',label:'Número económico'}]})),
         e(Alert, {message:'Se generará un endpoint y secreto HMAC únicos.', type:'info', showIcon:true})
       )
     ),
 
     // Modal: Editar Webhook In
-    e(Modal, {title:'Editar Endpoint', open:modalOpen==='edit-webhook-in', onCancel:function(){setModalOpen(null);setEditItem(null);}, onOk:function(){message.success('Guardado');setModalOpen(null);}, okText:'Guardar', width:520},
-      editItem && e(Form, {layout:'vertical'},
-        e(Form.Item, {label:'Nombre'}, e(Input, {defaultValue:editItem.name})),
-        e(Form.Item, {label:'Vincular por'}, e(Select, {defaultValue:editItem.linkBy==='Placa'?'plate':'other', options:[{value:'plate',label:'Placa'},{value:'id',label:'ID unidad'}]}))
+    e(Modal, {title:'Editar Endpoint', open:modalOpen==='edit-webhook-in', onCancel:closeModal, onOk:handleEditWebhookIn, okText:'Guardar', width:520},
+      e(Form, {form:editWhInForm, layout:'vertical'},
+        e(Form.Item, {name:'name', label:'Nombre', rules:[{required:true, message:'El nombre es obligatorio'}]}, 
+          e(Input)),
+        e(Form.Item, {name:'linkBy', label:'Vincular por', rules:[{required:true}]}, 
+          e(Select, {options:[{value:'plate',label:'Placa'},{value:'id',label:'ID unidad'}]}))
       )
     ),
 
     // Modal: Conexión externa
-    e(Modal, {title:connModal ? (connModal.connected ? 'Configurar ' : 'Conectar ') + connModal.name : '', open:!!connModal, onCancel:function(){setConnModal(null);}, onOk:function(){message.success(connModal.connected?'Configuración guardada':'Conectado exitosamente');setConnModal(null);}, okText:connModal && connModal.connected ? 'Guardar' : 'Conectar', width:480},
+    e(Modal, {title:connModal ? (connModal.connected ? 'Configurar ' : 'Conectar ') + connModal.name : '', open:!!connModal, onCancel:function(){setConnModal(null);}, onOk:handleConnection, okText:connModal && connModal.connected ? 'Guardar' : 'Conectar', width:480},
       connModal && e('div', null,
         connModal.connected 
-          ? e(Form, {layout:'vertical'},
+          ? e(Form, {form:connForm, layout:'vertical'},
               e(Alert, {message:'Conexión activa', type:'success', showIcon:true, style:{marginBottom:16}}),
-              e(Form.Item, {label:'Canal de Slack'}, e(Input, {defaultValue:'#alertas-flota'})),
-              e(Form.Item, {label:'Notificar eventos'}, e(Checkbox.Group, {defaultValue:['panic_button'], options:['panic_button','speeding','zone_exit']}))
+              e(Form.Item, {name:'channel', label:'Canal de Slack', rules:[{required:true, message:'Ingresa el canal'}], initialValue:'#alertas-flota'}, 
+                e(Input, {placeholder:'#canal'})),
+              e(Form.Item, {name:'events', label:'Notificar eventos', rules:[{required:true, message:'Selecciona al menos un evento'}]}, 
+                e(Checkbox.Group, {defaultValue:['panic_button'], options:['panic_button','speeding','zone_exit']}))
             )
           : e('div', null,
               e(Paragraph, null, 'Serás redirigido a ', e(Text, {strong:true}, connModal.name), ' para autorizar la conexión.'),
