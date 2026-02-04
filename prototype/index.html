@@ -5,21 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Next - Data Sharing Hub</title>
   
+  <!-- Google Fonts: Source Sans 3 -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
   
-  <!-- React 18 -->
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <!-- React 18 (unpkg) -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   
-  <!-- Day.js -->
+  <!-- Day.js (unpkg) -->
   <script src="https://unpkg.com/dayjs@1.11.11/dayjs.min.js"></script>
   
-  <!-- Ant Design 5 -->
+  <!-- Ant Design 5.20.6 (unpkg) -->
   <script src="https://unpkg.com/antd@5.20.6/dist/antd.min.js"></script>
   
-  <!-- Ant Design Icons -->
+  <!-- Ant Design Icons (unpkg) -->
   <script src="https://unpkg.com/@ant-design/icons@5.2.6/dist/index.umd.min.js"></script>
   
   <style>
@@ -36,10 +37,8 @@
       --warning: #faad14;
       --error: #ff4d4f;
     }
-    
     * { font-family: "Source Sans 3", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { margin: 0; background: var(--bg-page); color: var(--text-primary); -webkit-font-smoothing: antialiased; }
-    
     .ant-layout-sider { background: var(--bg-header) !important; border-right: 1px solid var(--border-light); }
     .ant-menu-light { background: transparent !important; }
     .ant-menu-light .ant-menu-item-selected { background-color: var(--bg-page) !important; color: var(--text-primary) !important; font-weight: 600; }
@@ -51,7 +50,6 @@
     .ant-table-thead > tr > th { background: var(--bg-header) !important; font-weight: 600 !important; }
     .ant-statistic-title { color: var(--text-secondary); font-size: 14px; }
     .ant-statistic-content-value { color: var(--text-primary); font-weight: 600; }
-    
     .logo-container { height: 64px; display: flex; align-items: center; padding: 0 16px; border-bottom: 1px solid var(--border-light); }
     .logo-icon { width: 32px; height: 32px; background: var(--primary); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; }
     .stat-card { transition: all 0.3s; }
@@ -62,383 +60,493 @@
     .webhook-item:hover { background: var(--bg-header); }
     .permission-tag { margin: 2px; }
     code { background: var(--bg-header); padding: 2px 8px; border-radius: 4px; font-size: 12px; border: 1px solid var(--border-light); font-family: 'SF Mono', Monaco, monospace; }
-    
-    #loading { display: flex; justify-content: center; align-items: center; height: 100vh; font-size: 18px; color: var(--text-secondary); }
+    .empty-state { text-align: center; padding: 60px 20px; }
+    .empty-state-icon { font-size: 48px; color: #d9d9d9; margin-bottom: 16px; }
   </style>
 </head>
 <body>
-  <div id="root"><div id="loading">Cargando prototipo...</div></div>
-
+  <div id="root"></div>
   <script>
-    // Wait for all scripts to load
-    window.onload = function() {
-      if (typeof antd === 'undefined') {
-        document.getElementById('root').innerHTML = '<div style="padding:40px;color:red;">Error: Ant Design no pudo cargar. Verifica tu conexión a internet.</div>';
-        return;
+    var e = React.createElement;
+    var useState = React.useState;
+    var Layout = antd.Layout, Menu = antd.Menu, Button = antd.Button, Card = antd.Card, Table = antd.Table;
+    var Tag = antd.Tag, Space = antd.Space, Typography = antd.Typography, Statistic = antd.Statistic;
+    var Modal = antd.Modal, Form = antd.Form, Input = antd.Input, Select = antd.Select, Checkbox = antd.Checkbox;
+    var Switch = antd.Switch, Tooltip = antd.Tooltip, Breadcrumb = antd.Breadcrumb, Row = antd.Row, Col = antd.Col;
+    var Alert = antd.Alert, message = antd.message, ConfigProvider = antd.ConfigProvider, Popconfirm = antd.Popconfirm;
+    var InputNumber = antd.InputNumber, Divider = antd.Divider, Empty = antd.Empty;
+    var Header = Layout.Header, Sider = Layout.Sider, Content = Layout.Content;
+    var Title = Typography.Title, Text = Typography.Text, Paragraph = Typography.Paragraph;
+    
+    var HomeOutlined = icons.HomeOutlined, KeyOutlined = icons.KeyOutlined, ShareAltOutlined = icons.ShareAltOutlined;
+    var ApiOutlined = icons.ApiOutlined, HistoryOutlined = icons.HistoryOutlined, BookOutlined = icons.BookOutlined;
+    var CodeOutlined = icons.CodeOutlined, PlusOutlined = icons.PlusOutlined, QuestionCircleOutlined = icons.QuestionCircleOutlined;
+    var SettingOutlined = icons.SettingOutlined, DeleteOutlined = icons.DeleteOutlined, PlayCircleOutlined = icons.PlayCircleOutlined;
+    var CopyOutlined = icons.CopyOutlined, CheckCircleOutlined = icons.CheckCircleOutlined, CloseCircleOutlined = icons.CloseCircleOutlined;
+    var DownloadOutlined = icons.DownloadOutlined, SlackOutlined = icons.SlackOutlined, DatabaseOutlined = icons.DatabaseOutlined;
+    var BankOutlined = icons.BankOutlined, BoxPlotOutlined = icons.BoxPlotOutlined, NodeIndexOutlined = icons.NodeIndexOutlined;
+    var SafetyCertificateOutlined = icons.SafetyCertificateOutlined, CloudServerOutlined = icons.CloudServerOutlined;
+    var ReloadOutlined = icons.ReloadOutlined, LockOutlined = icons.LockOutlined, ExclamationCircleOutlined = icons.ExclamationCircleOutlined;
+    var InboxOutlined = icons.InboxOutlined;
+
+    var theme = {
+      token: {
+        colorPrimary: '#1867FF',
+        colorText: '#3F3F3F',
+        colorTextSecondary: '#8c8c8c',
+        fontFamily: '"Source Sans 3", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        borderRadius: 8
       }
-      
-      const e = React.createElement;
-      const { useState } = React;
-      const { Layout, Menu, Button, Card, Table, Tag, Space, Typography, Statistic, Modal, Form, Input, Select, Checkbox, Switch, Tabs, Badge, Tooltip, Breadcrumb, Row, Col, Divider, Alert, message, ConfigProvider } = antd;
-      const { HomeOutlined, KeyOutlined, ShareAltOutlined, ApiOutlined, HistoryOutlined, BookOutlined, CodeOutlined, PlusOutlined, QuestionCircleOutlined, SettingOutlined, DeleteOutlined, PlayCircleOutlined, CopyOutlined, CheckCircleOutlined, CloseCircleOutlined, DownloadOutlined, SlackOutlined, DatabaseOutlined, BankOutlined, BoxPlotOutlined, NodeIndexOutlined, SafetyCertificateOutlined, CloudServerOutlined } = icons;
-      const { Header, Sider, Content } = Layout;
-      const { Title, Text, Paragraph } = Typography;
+    };
 
-      const theme = {
-        token: {
-          colorPrimary: '#1867FF',
-          colorText: '#3F3F3F',
-          colorTextSecondary: '#8c8c8c',
-          fontFamily: '"Source Sans 3", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-          borderRadius: 8,
-        },
-      };
+    var apiKeysData = [
+      { key: '1', name: 'Dashboard Power BI', token: 'sk_live_a8f3...x7k2', permissions: ['read:units', 'read:positions', 'read:events'], scope: 'Todas las unidades', lastUsed: 'hace 5 min', status: 'active' },
+      { key: '2', name: 'App Móvil Cliente', token: 'sk_live_b2c9...m4n8', permissions: ['read:positions'], scope: 'Grupo: "Entregas CDMX"', lastUsed: 'hace 1 hora', status: 'active' }
+    ];
 
-      const apiKeysData = [
-        { key: '1', name: 'Dashboard Power BI', token: 'sk_live_a8f3...x7k2', permissions: ['read:units', 'read:positions', 'read:events'], scope: 'Todas las unidades', lastUsed: 'hace 5 min', status: 'active' },
-        { key: '2', name: 'App Móvil Cliente', token: 'sk_live_b2c9...m4n8', permissions: ['read:positions'], scope: 'Grupo: "Entregas CDMX"', lastUsed: 'hace 1 hora', status: 'active' }
+    var webhooksOutData = [
+      { key: '1', name: 'Alertas Críticas → Slack', url: 'https://hooks.slack.com/services/T0.../B0...', events: ['panic_button', 'speeding', 'zone_exit'], delivered: 1247, failed: 3, lastSent: 'hace 2 min', active: true, hmac: true, retries: 3 },
+      { key: '2', name: 'Posiciones → Data Warehouse', url: 'https://api.warehouse.acme.com/ingest/fleet', events: ['position_update'], delivered: 45821, failed: 12, lastSent: 'hace 30 seg', active: true, hmac: true, retries: 5 },
+      { key: '3', name: 'Entregas → ERP SAP', url: 'https://sap.acme.com/api/fleet/deliveries', events: ['zone_entry', 'zone_exit'], delivered: 892, failed: 0, lastSent: 'hace 45 min', active: true, hmac: false, retries: 3 }
+    ];
+
+    var webhooksInData = [
+      { key: '1', name: 'Órdenes de Entrega ← ERP SAP', endpoint: 'https://api.next.numaris.com/webhook/in/ord_8f3k2...', secret: 'whsec_abc123...xyz', received: 2341, linkBy: 'Placa', lastReceived: 'hace 15 min', active: true },
+      { key: '2', name: 'Rutas Planificadas ← TMS', endpoint: 'https://api.next.numaris.com/webhook/in/rut_2m8x9...', secret: 'whsec_def456...uvw', received: 456, linkBy: 'Crea: Georutas', lastReceived: 'hace 2 horas', active: true }
+    ];
+
+    var logsData = [
+      { key: '1', timestamp: '2026-02-01 22:45:12', type: 'Webhook Out', typeColor: 'green', desc: 'panic_button → Slack', status: 200, latency: '145ms' },
+      { key: '2', timestamp: '2026-02-01 22:44:58', type: 'API', typeColor: 'blue', desc: 'GET /units/positions (Power BI)', status: 200, latency: '89ms' },
+      { key: '3', timestamp: '2026-02-01 22:44:32', type: 'Webhook In', typeColor: 'purple', desc: 'Orden #12847 recibida de SAP', status: 200, latency: '234ms' },
+      { key: '4', timestamp: '2026-02-01 22:43:15', type: 'Webhook Out', typeColor: 'green', desc: 'position_update → Data Warehouse', status: 200, latency: '67ms' },
+      { key: '5', timestamp: '2026-02-01 22:41:08', type: 'Webhook Out', typeColor: 'green', desc: 'zone_exit → ERP SAP', status: 503, latency: '30,012ms', error: true }
+    ];
+
+    function App() {
+      var _state = useState('overview');
+      var activeTab = _state[0], setActiveTab = _state[1];
+      var _modal = useState(null);
+      var modalOpen = _modal[0], setModalOpen = _modal[1];
+      var _keys = useState(apiKeysData);
+      var keys = _keys[0], setKeys = _keys[1];
+      var _whOut = useState(webhooksOutData);
+      var whOut = _whOut[0], setWhOut = _whOut[1];
+      var _whIn = useState(webhooksInData);
+      var whIn = _whIn[0], setWhIn = _whIn[1];
+      var _urlError = useState('');
+      var urlError = _urlError[0], setUrlError = _urlError[1];
+
+      function validateUrl(url) {
+        if (!url) return '';
+        if (!url.startsWith('https://')) return 'La URL debe comenzar con https://';
+        try { new URL(url); return ''; } catch (e) { return 'URL inválida'; }
+      }
+
+      function handleDeleteKey(key) {
+        setKeys(keys.filter(function(k) { return k.key !== key; }));
+        message.success('API Key eliminada');
+      }
+
+      function handleRegenerateKey(key) {
+        message.success('Token regenerado. Se mostrará una sola vez.');
+        Modal.info({ title: 'Nuevo Token', content: e('div', null, e('p', null, 'Guarda este token, no se mostrará de nuevo:'), e('code', { style: { display: 'block', padding: 12, background: '#f5f5f5', borderRadius: 4, wordBreak: 'break-all' } }, 'sk_live_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15))) });
+      }
+
+      function handleDeleteWebhook(key, type) {
+        if (type === 'out') setWhOut(whOut.filter(function(w) { return w.key !== key; }));
+        else setWhIn(whIn.filter(function(w) { return w.key !== key; }));
+        message.success('Webhook eliminado');
+      }
+
+      var menuItems = [
+        { key: 'divider1', type: 'group', label: 'Integraciones' },
+        { key: 'overview', icon: e(HomeOutlined), label: 'Vista General' },
+        { key: 'api-keys', icon: e(KeyOutlined), label: 'API Keys' },
+        { key: 'webhooks-out', icon: e(ShareAltOutlined), label: 'Webhooks Salientes' },
+        { key: 'webhooks-in', icon: e(ApiOutlined, { style: { transform: 'rotate(180deg)' } }), label: 'Webhooks Entrantes' },
+        { key: 'connections', icon: e(CloudServerOutlined), label: 'Conexiones' },
+        { key: 'logs', icon: e(HistoryOutlined), label: 'Logs' },
+        { key: 'divider2', type: 'group', label: 'Ayuda' },
+        { key: 'docs', icon: e(BookOutlined), label: 'Documentación API' },
+        { key: 'sdks', icon: e(CodeOutlined), label: 'SDKs' }
       ];
 
-      const webhooksOutData = [
-        { key: '1', name: 'Alertas Críticas → Slack', url: 'https://hooks.slack.com/services/T0.../B0...', events: ['panic_button', 'speeding', 'zone_exit'], delivered: 1247, failed: 3, lastSent: 'hace 2 min', active: true, iconType: 'slack' },
-        { key: '2', name: 'Posiciones → Data Warehouse', url: 'https://api.warehouse.acme.com/ingest/fleet', events: ['position_update'], delivered: 45821, failed: 12, lastSent: 'hace 30 seg', active: true, iconType: 'database' },
-        { key: '3', name: 'Entregas → ERP SAP', url: 'https://sap.acme.com/api/fleet/deliveries', events: ['zone_entry (cliente)', 'zone_exit (cliente)'], delivered: 892, failed: 0, lastSent: 'hace 45 min', active: true, iconType: 'bank' }
-      ];
-
-      const webhooksInData = [
-        { key: '1', name: 'Órdenes de Entrega ← ERP SAP', endpoint: 'https://api.next.numaris.com/webhook/in/ord_8f3k2...', received: 2341, linkBy: 'Placa', lastReceived: 'hace 15 min', active: true, iconType: 'box' },
-        { key: '2', name: 'Rutas Planificadas ← TMS', endpoint: 'https://api.next.numaris.com/webhook/in/rut_2m8x9...', received: 456, linkBy: 'Crea: Georutas', lastReceived: 'hace 2 horas', active: true, iconType: 'node' }
-      ];
-
-      const logsData = [
-        { key: '1', timestamp: '2026-02-01 22:45:12', type: 'Webhook Out', typeColor: 'green', desc: 'panic_button → Slack', status: 200, latency: '145ms' },
-        { key: '2', timestamp: '2026-02-01 22:44:58', type: 'API', typeColor: 'blue', desc: 'GET /units/positions (Power BI)', status: 200, latency: '89ms' },
-        { key: '3', timestamp: '2026-02-01 22:44:32', type: 'Webhook In', typeColor: 'purple', desc: 'Orden #12847 recibida de SAP', status: 200, latency: '234ms' },
-        { key: '4', timestamp: '2026-02-01 22:43:15', type: 'Webhook Out', typeColor: 'green', desc: 'position_update → Data Warehouse', status: 200, latency: '67ms' },
-        { key: '5', timestamp: '2026-02-01 22:41:08', type: 'Webhook Out', typeColor: 'green', desc: 'zone_exit → ERP SAP', status: 503, latency: '30,012ms', error: true },
-      ];
-
-      const activityData = [
-        { iconType: 'check', bg: '#f6ffed', color: '#52c41a', title: 'Webhook entregado a', target: 'Slack', desc: 'Evento: panic_button - Unidad TRK-001', time: 'hace 2 min' },
-        { iconType: 'download', bg: '#f9f0ff', color: '#722ed1', title: 'Datos recibidos de', target: 'ERP SAP', desc: '12 órdenes de entrega importadas', time: 'hace 15 min' },
-        { iconType: 'key', bg: '#e6f4ff', color: '#1867FF', title: 'API Request desde', target: 'Dashboard BI', desc: 'GET /api/v1/units/positions - 200 OK', time: 'hace 23 min' },
-      ];
-
-      function getIcon(type, style) {
-        const iconMap = {
-          'check': CheckCircleOutlined,
-          'download': DownloadOutlined,
-          'key': KeyOutlined,
-          'slack': SlackOutlined,
-          'database': DatabaseOutlined,
-          'bank': BankOutlined,
-          'box': BoxPlotOutlined,
-          'node': NodeIndexOutlined
+      function renderEmptyState(type, onAdd) {
+        var configs = {
+          'api-keys': { icon: KeyOutlined, title: 'No hay API Keys', desc: 'Crea tu primera API Key para que sistemas externos puedan acceder a datos de Next', btn: 'Crear API Key' },
+          'webhooks-out': { icon: ShareAltOutlined, title: 'No hay Webhooks Salientes', desc: 'Configura webhooks para enviar eventos automáticamente a tus sistemas externos', btn: 'Crear Webhook' },
+          'webhooks-in': { icon: ApiOutlined, title: 'No hay Webhooks Entrantes', desc: 'Crea endpoints para recibir datos de sistemas externos hacia Next', btn: 'Crear Endpoint' }
         };
-        return e(iconMap[type] || KeyOutlined, { style: style });
+        var cfg = configs[type];
+        return e('div', { className: 'empty-state' },
+          e('div', { className: 'empty-state-icon' }, e(cfg.icon)),
+          e(Title, { level: 4, style: { color: '#8c8c8c' } }, cfg.title),
+          e(Paragraph, { type: 'secondary' }, cfg.desc),
+          e(Button, { type: 'primary', icon: e(PlusOutlined), onClick: onAdd }, cfg.btn)
+        );
       }
 
-      function App() {
-        const [activeTab, setActiveTab] = useState('overview');
-        const [modalOpen, setModalOpen] = useState(null);
+      function renderApiKeys() {
+        if (keys.length === 0) return renderEmptyState('api-keys', function() { setModalOpen('api-key'); });
+        return e('div', null,
+          e('div', { style: { marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' } },
+            e('div', null,
+              e(Title, { level: 4, style: { margin: 0 } }, 'API Keys'),
+              e(Text, { type: 'secondary' }, 'Gestiona tokens de acceso para tus aplicaciones externas')
+            ),
+            e(Button, { type: 'primary', icon: e(PlusOutlined), onClick: function() { setModalOpen('api-key'); } }, 'Nueva API Key')
+          ),
+          e(Space, { direction: 'vertical', style: { width: '100%' }, size: 16 },
+            keys.map(function(item) {
+              return e(Card, { key: item.key },
+                e('div', { style: { display: 'flex', justifyContent: 'space-between' } },
+                  e(Space, { align: 'start' },
+                    e('div', { style: { width: 40, height: 40, background: '#e6f4ff', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' } }, e(KeyOutlined, { style: { color: '#1867FF' } })),
+                    e('div', null,
+                      e(Space, null, e(Text, { strong: true }, item.name), e(Tag, { color: 'success' }, 'Activa')),
+                      e('div', { style: { marginTop: 8 } },
+                        e('code', null, item.token),
+                        e(Button, { type: 'text', size: 'small', icon: e(CopyOutlined), onClick: function() { message.success('Token copiado'); } })
+                      ),
+                      e('div', { style: { marginTop: 8 } }, item.permissions.map(function(p) { return e(Tag, { key: p, color: 'blue', className: 'permission-tag' }, p); })),
+                      e(Space, { style: { marginTop: 8 } },
+                        e(Text, { type: 'secondary', style: { fontSize: 12 } }, item.scope),
+                        e(Text, { type: 'secondary', style: { fontSize: 12 } }, '• Último uso: ' + item.lastUsed)
+                      )
+                    )
+                  ),
+                  e(Space, null,
+                    e(Tooltip, { title: 'Regenerar Token' }, e(Button, { icon: e(ReloadOutlined), onClick: function() { handleRegenerateKey(item.key); } })),
+                    e(Button, { icon: e(SettingOutlined) }),
+                    e(Popconfirm, { title: '¿Eliminar API Key?', description: 'Esta acción no se puede deshacer.', onConfirm: function() { handleDeleteKey(item.key); }, okText: 'Eliminar', cancelText: 'Cancelar', okButtonProps: { danger: true } },
+                      e(Button, { icon: e(DeleteOutlined), danger: true })
+                    )
+                  )
+                )
+              );
+            })
+          )
+        );
+      }
 
-        const menuItems = [
-          { key: 'divider1', type: 'group', label: 'Integraciones' },
-          { key: 'overview', icon: e(HomeOutlined), label: 'Vista General' },
-          { key: 'api-keys', icon: e(KeyOutlined), label: 'API Keys' },
-          { key: 'webhooks-out', icon: e(ShareAltOutlined), label: 'Webhooks Salientes' },
-          { key: 'webhooks-in', icon: e(ApiOutlined, { style: { transform: 'rotate(180deg)' } }), label: 'Webhooks Entrantes' },
-          { key: 'connections', icon: e(CloudServerOutlined), label: 'Conexiones' },
-          { key: 'logs', icon: e(HistoryOutlined), label: 'Logs' },
-          { key: 'divider2', type: 'group', label: 'Ayuda' },
-          { key: 'docs', icon: e(BookOutlined), label: 'Documentación API' },
-          { key: 'sdks', icon: e(CodeOutlined), label: 'SDKs' },
-        ];
+      function renderWebhooksOut() {
+        if (whOut.length === 0) return renderEmptyState('webhooks-out', function() { setModalOpen('webhook-out'); });
+        var iconColors = { '1': '#722ed1', '2': '#1867FF', '3': '#52c41a' };
+        var iconBgs = { '1': '#f9f0ff', '2': '#e6f4ff', '3': '#f6ffed' };
+        var iconComps = { '1': SlackOutlined, '2': DatabaseOutlined, '3': BankOutlined };
+        return e('div', null,
+          e('div', { style: { marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' } },
+            e('div', null,
+              e(Title, { level: 4, style: { margin: 0 } }, 'Webhooks Salientes'),
+              e(Text, { type: 'secondary' }, 'Envía datos de Next a tus sistemas externos automáticamente')
+            ),
+            e(Button, { type: 'primary', icon: e(PlusOutlined), onClick: function() { setModalOpen('webhook-out'); } }, 'Nuevo Webhook')
+          ),
+          e(Space, { direction: 'vertical', style: { width: '100%' }, size: 16 },
+            whOut.map(function(item) {
+              var IconComp = iconComps[item.key] || DatabaseOutlined;
+              return e(Card, { key: item.key, className: 'webhook-item' },
+                e('div', { style: { display: 'flex', justifyContent: 'space-between' } },
+                  e(Space, { align: 'start' },
+                    e('div', { style: { width: 40, height: 40, background: iconBgs[item.key] || '#e6f4ff', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 } }, e(IconComp, { style: { color: iconColors[item.key] || '#1867FF' } })),
+                    e('div', null,
+                      e(Space, null,
+                        e(Text, { strong: true }, item.name),
+                        item.hmac && e(Tag, { color: 'green', icon: e(LockOutlined) }, 'HMAC'),
+                        e(Tag, null, item.retries + ' reintentos')
+                      ),
+                      e('div', null, e('code', { style: { fontSize: 11 } }, item.url)),
+                      e('div', { style: { marginTop: 8 } }, item.events.map(function(ev) {
+                        var color = ev.includes('panic') ? 'red' : ev.includes('speed') || ev.includes('zone_exit') ? 'orange' : 'blue';
+                        return e(Tag, { key: ev, color: color, className: 'permission-tag' }, ev);
+                      })),
+                      e(Space, { style: { marginTop: 8 } },
+                        e(Text, { type: 'success', style: { fontSize: 12 } }, e(CheckCircleOutlined), ' ' + item.delivered.toLocaleString() + ' entregados'),
+                        e(Text, { type: item.failed > 0 ? 'danger' : 'secondary', style: { fontSize: 12 } }, e(CloseCircleOutlined), ' ' + item.failed + ' fallidos'),
+                        e(Text, { type: 'secondary', style: { fontSize: 12 } }, '• Último: ' + item.lastSent)
+                      )
+                    )
+                  ),
+                  e(Space, null,
+                    e(Switch, { defaultChecked: item.active }),
+                    e(Tooltip, { title: 'Probar' }, e(Button, { icon: e(PlayCircleOutlined) })),
+                    e(Button, { icon: e(SettingOutlined) }),
+                    e(Popconfirm, { title: '¿Eliminar Webhook?', description: 'Esta acción no se puede deshacer.', onConfirm: function() { handleDeleteWebhook(item.key, 'out'); }, okText: 'Eliminar', cancelText: 'Cancelar', okButtonProps: { danger: true } },
+                      e(Button, { icon: e(DeleteOutlined), danger: true })
+                    )
+                  )
+                )
+              );
+            })
+          )
+        );
+      }
 
-        const logsColumns = [
+      function renderWebhooksIn() {
+        if (whIn.length === 0) return renderEmptyState('webhooks-in', function() { setModalOpen('webhook-in'); });
+        var iconColors = { '1': '#faad14', '2': '#13c2c2' };
+        var iconBgs = { '1': '#fffbe6', '2': '#e6fffb' };
+        var iconComps = { '1': BoxPlotOutlined, '2': NodeIndexOutlined };
+        return e('div', null,
+          e('div', { style: { marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' } },
+            e('div', null,
+              e(Title, { level: 4, style: { margin: 0 } }, 'Webhooks Entrantes'),
+              e(Text, { type: 'secondary' }, 'Recibe datos de sistemas externos hacia Next')
+            ),
+            e(Button, { type: 'primary', icon: e(PlusOutlined), onClick: function() { setModalOpen('webhook-in'); } }, 'Nuevo Endpoint')
+          ),
+          e(Alert, { message: '¿Cómo funcionan los webhooks entrantes?', description: 'Crea endpoints únicos para recibir datos de tus sistemas. Los datos se procesan y vinculan automáticamente con tus unidades.', type: 'info', showIcon: true, style: { marginBottom: 24 } }),
+          e(Space, { direction: 'vertical', style: { width: '100%' }, size: 16 },
+            whIn.map(function(item) {
+              var IconComp = iconComps[item.key] || BoxPlotOutlined;
+              return e(Card, { key: item.key, className: 'webhook-item' },
+                e('div', { style: { display: 'flex', justifyContent: 'space-between' } },
+                  e(Space, { align: 'start' },
+                    e('div', { style: { width: 40, height: 40, background: iconBgs[item.key] || '#fffbe6', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 } }, e(IconComp, { style: { color: iconColors[item.key] || '#faad14' } })),
+                    e('div', null,
+                      e(Text, { strong: true }, item.name),
+                      e('div', { style: { marginTop: 8 } },
+                        e(Text, { type: 'secondary', style: { fontSize: 12 } }, 'Endpoint:'),
+                        e('br'),
+                        e('code', { style: { fontSize: 11 } }, item.endpoint),
+                        e(Button, { type: 'text', size: 'small', icon: e(CopyOutlined), onClick: function() { message.success('Endpoint copiado'); } })
+                      ),
+                      e('div', { style: { marginTop: 8, padding: 8, background: '#f5f5f5', borderRadius: 4 } },
+                        e(Text, { type: 'secondary', style: { fontSize: 12 } }, 'Secreto de verificación:'),
+                        e('br'),
+                        e('code', { style: { fontSize: 11 } }, item.secret),
+                        e(Button, { type: 'text', size: 'small', icon: e(CopyOutlined), onClick: function() { message.success('Secreto copiado'); } }),
+                        e(Tooltip, { title: 'Regenerar secreto' }, e(Button, { type: 'text', size: 'small', icon: e(ReloadOutlined), onClick: function() { message.success('Secreto regenerado'); } }))
+                      ),
+                      e(Space, { style: { marginTop: 8 } },
+                        e(Text, { type: 'secondary', style: { fontSize: 12 } }, e(DownloadOutlined, { style: { color: '#722ed1' } }), ' ' + item.received.toLocaleString() + ' recibidos'),
+                        e(Text, { type: 'secondary', style: { fontSize: 12 } }, '• ' + item.linkBy),
+                        e(Text, { type: 'secondary', style: { fontSize: 12 } }, '• Último: ' + item.lastReceived)
+                      )
+                    )
+                  ),
+                  e(Space, null,
+                    e(Switch, { defaultChecked: item.active }),
+                    e(Button, { icon: e(SettingOutlined) }),
+                    e(Popconfirm, { title: '¿Eliminar Endpoint?', description: 'Esta acción no se puede deshacer.', onConfirm: function() { handleDeleteWebhook(item.key, 'in'); }, okText: 'Eliminar', cancelText: 'Cancelar', okButtonProps: { danger: true } },
+                      e(Button, { icon: e(DeleteOutlined), danger: true })
+                    )
+                  )
+                )
+              );
+            })
+          )
+        );
+      }
+
+      function renderOverview() {
+        return e('div', null,
+          e(Row, { gutter: [16, 16], style: { marginBottom: 24 } },
+            e(Col, { span: 6 }, e(Card, { className: 'stat-card' }, e(Statistic, { title: 'API Requests (24h)', value: 12847 }), e(Text, { type: 'success', style: { fontSize: 12 } }, '↑ 12% vs ayer'))),
+            e(Col, { span: 6 }, e(Card, { className: 'stat-card' }, e(Statistic, { title: 'Webhooks Enviados', value: 3421 }), e(Text, { type: 'success', style: { fontSize: 12 } }, '✓ 99.2% entregados'))),
+            e(Col, { span: 6 }, e(Card, { className: 'stat-card' }, e(Statistic, { title: 'Datos Recibidos', value: 847 }), e(Text, { type: 'secondary', style: { fontSize: 12 } }, 'Desde 3 fuentes externas'))),
+            e(Col, { span: 6 }, e(Card, { className: 'stat-card' }, e(Statistic, { title: 'Integraciones Activas', value: 8 }), e(Text, { type: 'secondary', style: { fontSize: 12 } }, '2 API + 4 Out + 2 In')))
+          ),
+          e(Row, { gutter: [16, 16], style: { marginBottom: 24 } },
+            e(Col, { span: 8 }, e(Card, { className: 'integration-card', style: { borderLeft: '4px solid #1867FF' }, onClick: function() { setActiveTab('api-keys'); } },
+              e(Space, { align: 'start' },
+                e('div', { style: { width: 48, height: 48, background: '#e6f4ff', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' } }, e(KeyOutlined, { style: { fontSize: 24, color: '#1867FF' } })),
+                e('div', null, e(Title, { level: 5, style: { margin: 0 } }, 'API Keys'), e(Paragraph, { type: 'secondary', style: { margin: '8px 0' } }, 'Crea tokens para que sistemas externos accedan a datos de Next'), e(Text, { style: { color: '#1867FF' } }, keys.length + ' keys activas →'))
+              )
+            )),
+            e(Col, { span: 8 }, e(Card, { className: 'integration-card', style: { borderLeft: '4px solid #52c41a' }, onClick: function() { setActiveTab('webhooks-out'); } },
+              e(Space, { align: 'start' },
+                e('div', { style: { width: 48, height: 48, background: '#f6ffed', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' } }, e(ShareAltOutlined, { style: { fontSize: 24, color: '#52c41a' } })),
+                e('div', null, e(Title, { level: 5, style: { margin: 0 } }, 'Compartir Datos'), e(Paragraph, { type: 'secondary', style: { margin: '8px 0' } }, 'Envía eventos y posiciones a tus sistemas externos'), e(Text, { style: { color: '#52c41a' } }, whOut.length + ' webhooks activos →'))
+              )
+            )),
+            e(Col, { span: 8 }, e(Card, { className: 'integration-card', style: { borderLeft: '4px solid #722ed1' }, onClick: function() { setActiveTab('webhooks-in'); } },
+              e(Space, { align: 'start' },
+                e('div', { style: { width: 48, height: 48, background: '#f9f0ff', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' } }, e(ApiOutlined, { style: { fontSize: 24, color: '#722ed1', transform: 'rotate(180deg)' } })),
+                e('div', null, e(Title, { level: 5, style: { margin: 0 } }, 'Recibir Datos'), e(Paragraph, { type: 'secondary', style: { margin: '8px 0' } }, 'Recibe información de sistemas externos hacia Next'), e(Text, { style: { color: '#722ed1' } }, whIn.length + ' endpoints activos →'))
+              )
+            ))
+          ),
+          e(Card, { title: 'Actividad Reciente', extra: e('a', { onClick: function() { setActiveTab('logs'); } }, 'Ver todos los logs') },
+            [
+              { icon: CheckCircleOutlined, bg: '#f6ffed', color: '#52c41a', title: 'Webhook entregado a', target: 'Slack', desc: 'Evento: panic_button - Unidad TRK-001', time: 'hace 2 min' },
+              { icon: DownloadOutlined, bg: '#f9f0ff', color: '#722ed1', title: 'Datos recibidos de', target: 'ERP SAP', desc: '12 órdenes de entrega importadas', time: 'hace 15 min' },
+              { icon: KeyOutlined, bg: '#e6f4ff', color: '#1867FF', title: 'API Request desde', target: 'Dashboard BI', desc: 'GET /api/v1/units/positions - 200 OK', time: 'hace 23 min' }
+            ].map(function(item, index) {
+              return e('div', { key: index, style: { display: 'flex', alignItems: 'center', padding: '12px 0', borderBottom: index < 2 ? '1px solid #f0f0f0' : 'none' } },
+                e('div', { style: { width: 32, height: 32, background: item.bg, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 16 } }, e(item.icon, { style: { color: item.color } })),
+                e('div', { style: { flex: 1 } }, e(Text, null, item.title + ' ', e(Text, { strong: true }, item.target)), e('br'), e(Text, { type: 'secondary', style: { fontSize: 12 } }, item.desc)),
+                e(Text, { type: 'secondary', style: { fontSize: 12 } }, item.time)
+              );
+            })
+          )
+        );
+      }
+
+      function renderLogs() {
+        var columns = [
           { title: 'Timestamp', dataIndex: 'timestamp', key: 'timestamp', width: 180 },
           { title: 'Tipo', dataIndex: 'type', key: 'type', width: 120, render: function(text, record) { return e(Tag, { color: record.typeColor }, text); } },
           { title: 'Descripción', dataIndex: 'desc', key: 'desc' },
-          { title: 'Estado', dataIndex: 'status', key: 'status', width: 100, render: function(status) { return status === 200 ? e(Text, { type: 'success' }, e(CheckCircleOutlined), ' ', status) : e(Text, { type: 'danger' }, e(CloseCircleOutlined), ' ', status); } },
-          { title: 'Latencia', dataIndex: 'latency', key: 'latency', width: 100 },
+          { title: 'Estado', dataIndex: 'status', key: 'status', width: 100, render: function(status) { return status === 200 ? e(Text, { type: 'success' }, e(CheckCircleOutlined), ' ' + status) : e(Text, { type: 'danger' }, e(CloseCircleOutlined), ' ' + status); } },
+          { title: 'Latencia', dataIndex: 'latency', key: 'latency', width: 100 }
         ];
+        return e('div', null,
+          e('div', { style: { marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' } },
+            e('div', null, e(Title, { level: 4, style: { margin: 0 } }, 'Logs de Actividad'), e(Text, { type: 'secondary' }, 'Historial de todas las operaciones de integración')),
+            e(Space, null,
+              e(Select, { defaultValue: 'all', style: { width: 160 }, options: [{ value: 'all', label: 'Todos los tipos' }, { value: 'api', label: 'API Requests' }, { value: 'webhook-out', label: 'Webhooks Out' }, { value: 'webhook-in', label: 'Webhooks In' }] }),
+              e(Select, { defaultValue: '1h', style: { width: 140 }, options: [{ value: '1h', label: 'Última hora' }, { value: '24h', label: 'Últimas 24h' }, { value: '7d', label: 'Últimos 7 días' }] })
+            )
+          ),
+          e(Card, { bodyStyle: { padding: 0 } }, e(Table, { columns: columns, dataSource: logsData, pagination: { pageSize: 10, style: { padding: '16px' } } }))
+        );
+      }
 
-        var renderOverview = function() {
-          return e(React.Fragment, null,
-            e(Row, { gutter: [16, 16], style: { marginBottom: 24 } },
-              e(Col, { span: 6 }, e(Card, { className: 'stat-card' }, e(Statistic, { title: 'API Requests (24h)', value: 12847 }), e(Text, { type: 'success', style: { fontSize: 12 } }, '↑ 12% vs ayer'))),
-              e(Col, { span: 6 }, e(Card, { className: 'stat-card' }, e(Statistic, { title: 'Webhooks Enviados', value: 3421 }), e(Text, { type: 'success', style: { fontSize: 12 } }, '✓ 99.2% entregados'))),
-              e(Col, { span: 6 }, e(Card, { className: 'stat-card' }, e(Statistic, { title: 'Datos Recibidos', value: 847 }), e(Text, { type: 'secondary', style: { fontSize: 12 } }, 'Desde 3 fuentes externas'))),
-              e(Col, { span: 6 }, e(Card, { className: 'stat-card' }, e(Statistic, { title: 'Integraciones Activas', value: 8 }), e(Text, { type: 'secondary', style: { fontSize: 12 } }, '2 API + 4 Out + 2 In')))
-            ),
-            e(Row, { gutter: [16, 16], style: { marginBottom: 24 } },
-              e(Col, { span: 8 }, e(Card, { className: 'integration-card', style: { borderLeft: '4px solid #1867FF' }, onClick: function() { setActiveTab('api-keys'); } },
-                e(Space, { align: 'start' },
-                  e('div', { style: { width: 48, height: 48, background: '#e6f4ff', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' } }, e(KeyOutlined, { style: { fontSize: 24, color: '#1867FF' } })),
-                  e('div', null,
-                    e(Title, { level: 5, style: { margin: 0 } }, 'API Keys'),
-                    e(Paragraph, { type: 'secondary', style: { margin: '8px 0' } }, 'Crea tokens para que sistemas externos accedan a datos de Next'),
-                    e(Text, { style: { color: '#1867FF' } }, '2 keys activas →')
-                  )
-                )
-              )),
-              e(Col, { span: 8 }, e(Card, { className: 'integration-card', style: { borderLeft: '4px solid #52c41a' }, onClick: function() { setActiveTab('webhooks-out'); } },
-                e(Space, { align: 'start' },
-                  e('div', { style: { width: 48, height: 48, background: '#f6ffed', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' } }, e(ShareAltOutlined, { style: { fontSize: 24, color: '#52c41a' } })),
-                  e('div', null,
-                    e(Title, { level: 5, style: { margin: 0 } }, 'Compartir Datos'),
-                    e(Paragraph, { type: 'secondary', style: { margin: '8px 0' } }, 'Envía eventos y posiciones a tus sistemas externos'),
-                    e(Text, { style: { color: '#52c41a' } }, '4 webhooks activos →')
-                  )
-                )
-              )),
-              e(Col, { span: 8 }, e(Card, { className: 'integration-card', style: { borderLeft: '4px solid #722ed1' }, onClick: function() { setActiveTab('webhooks-in'); } },
-                e(Space, { align: 'start' },
-                  e('div', { style: { width: 48, height: 48, background: '#f9f0ff', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' } }, e(ApiOutlined, { style: { fontSize: 24, color: '#722ed1', transform: 'rotate(180deg)' } })),
-                  e('div', null,
-                    e(Title, { level: 5, style: { margin: 0 } }, 'Recibir Datos'),
-                    e(Paragraph, { type: 'secondary', style: { margin: '8px 0' } }, 'Recibe información de sistemas externos hacia Next'),
-                    e(Text, { style: { color: '#722ed1' } }, '2 endpoints activos →')
-                  )
-                )
-              ))
-            ),
-            e(Card, { title: 'Actividad Reciente', extra: e('a', { onClick: function() { setActiveTab('logs'); } }, 'Ver todos los logs') },
-              activityData.map(function(item, index) {
-                return e('div', { key: index, style: { display: 'flex', alignItems: 'center', padding: '12px 0', borderBottom: index < activityData.length - 1 ? '1px solid #f0f0f0' : 'none' } },
-                  e('div', { style: { width: 32, height: 32, background: item.bg, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 16 } }, getIcon(item.iconType, { color: item.color })),
-                  e('div', { style: { flex: 1 } },
-                    e(Text, null, item.title, ' ', e(Text, { strong: true }, item.target)),
-                    e('br'),
-                    e(Text, { type: 'secondary', style: { fontSize: 12 } }, item.desc)
+      function renderConnections() {
+        var conns = [
+          { name: 'Slack', desc: 'Envía alertas a canales', icon: SlackOutlined, color: '#722ed1', connected: true },
+          { name: 'Microsoft Teams', desc: 'Notificaciones en Teams', icon: SafetyCertificateOutlined, color: '#1867FF', connected: false },
+          { name: 'SAP ERP', desc: 'Sincroniza entregas', icon: BankOutlined, color: '#1867FF', connected: true },
+          { name: 'Salesforce', desc: 'Vincula con CRM', icon: CloudServerOutlined, color: '#1867FF', connected: false },
+          { name: 'Google Sheets', desc: 'Exporta a hojas', icon: DatabaseOutlined, color: '#52c41a', connected: false }
+        ];
+        return e('div', null,
+          e('div', { style: { marginBottom: 24 } }, e(Title, { level: 4, style: { margin: 0 } }, 'Conexiones Pre-configuradas'), e(Text, { type: 'secondary' }, 'Integraciones listas para usar con un click')),
+          e(Row, { gutter: [16, 16] },
+            conns.map(function(item, index) {
+              return e(Col, { span: 8, key: index },
+                e(Card, { style: item.connected ? { border: '2px solid #52c41a' } : {} },
+                  e('div', { style: { display: 'flex', justifyContent: 'space-between', marginBottom: 16 } },
+                    e('div', { style: { width: 40, height: 40, background: item.color + '15', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: item.color, fontSize: 20 } }, e(item.icon)),
+                    item.connected && e(Tag, { color: 'success' }, 'Conectado')
                   ),
-                  e(Text, { type: 'secondary', style: { fontSize: 12 } }, item.time)
-                );
-              })
-            )
-          );
-        };
-
-        var renderApiKeys = function() {
-          return e(React.Fragment, null,
-            e('div', { style: { marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' } },
-              e('div', null,
-                e(Title, { level: 4, style: { margin: 0 } }, 'API Keys'),
-                e(Text, { type: 'secondary' }, 'Gestiona tokens de acceso para tus aplicaciones externas')
-              ),
-              e(Button, { type: 'primary', icon: e(PlusOutlined), onClick: function() { setModalOpen('api-key'); } }, 'Nueva API Key')
-            ),
-            e(Space, { direction: 'vertical', style: { width: '100%' }, size: 16 },
-              apiKeysData.map(function(item) {
-                return e(Card, { key: item.key },
-                  e('div', { style: { display: 'flex', justifyContent: 'space-between' } },
-                    e(Space, { align: 'start' },
-                      e('div', { style: { width: 40, height: 40, background: '#e6f4ff', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' } }, e(KeyOutlined, { style: { color: '#1867FF' } })),
-                      e('div', null,
-                        e(Space, null, e(Text, { strong: true }, item.name), e(Tag, { color: 'success' }, 'Activa')),
-                        e('div', { style: { marginTop: 8 } }, e('code', null, item.token), e(Button, { type: 'text', size: 'small', icon: e(CopyOutlined), onClick: function() { message.success('Token copiado'); } })),
-                        e('div', { style: { marginTop: 8 } }, item.permissions.map(function(p) { return e(Tag, { key: p, color: 'blue', className: 'permission-tag' }, p); })),
-                        e(Space, { style: { marginTop: 8 } }, e(Text, { type: 'secondary', style: { fontSize: 12 } }, item.scope), e(Text, { type: 'secondary', style: { fontSize: 12 } }, '• Último uso: ', item.lastUsed))
-                      )
-                    ),
-                    e(Space, null, e(Button, { icon: e(SettingOutlined) }), e(Button, { icon: e(DeleteOutlined), danger: true }))
-                  )
-                );
-              })
-            )
-          );
-        };
-
-        var renderWebhooksOut = function() {
-          return e(React.Fragment, null,
-            e('div', { style: { marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' } },
-              e('div', null,
-                e(Title, { level: 4, style: { margin: 0 } }, 'Webhooks Salientes'),
-                e(Text, { type: 'secondary' }, 'Envía datos de Next a tus sistemas externos automáticamente')
-              ),
-              e(Button, { type: 'primary', icon: e(PlusOutlined), onClick: function() { setModalOpen('webhook-out'); } }, 'Nuevo Webhook')
-            ),
-            e(Space, { direction: 'vertical', style: { width: '100%' }, size: 16 },
-              webhooksOutData.map(function(item) {
-                return e(Card, { key: item.key, className: 'webhook-item' },
-                  e('div', { style: { display: 'flex', justifyContent: 'space-between' } },
-                    e(Space, { align: 'start' },
-                      e('div', { style: { width: 40, height: 40, background: item.iconType === 'slack' ? '#f9f0ff' : item.iconType === 'database' ? '#e6f4ff' : '#f6ffed', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 } }, getIcon(item.iconType, { color: item.iconType === 'slack' ? '#722ed1' : item.iconType === 'database' ? '#1867FF' : '#52c41a' })),
-                      e('div', null,
-                        e(Text, { strong: true }, item.name),
-                        e('div', null, e('code', { style: { fontSize: 11 } }, item.url)),
-                        e('div', { style: { marginTop: 8 } }, item.events.map(function(ev) { return e(Tag, { key: ev, color: ev.includes('panic') ? 'red' : ev.includes('speed') || ev.includes('zone_exit') ? 'orange' : ev.includes('cliente') ? 'green' : 'blue', className: 'permission-tag' }, ev); })),
-                        e(Space, { style: { marginTop: 8 } },
-                          e(Text, { type: 'success', style: { fontSize: 12 } }, e(CheckCircleOutlined), ' ', item.delivered.toLocaleString(), ' entregados'),
-                          e(Text, { type: item.failed > 0 ? 'danger' : 'secondary', style: { fontSize: 12 } }, e(CloseCircleOutlined), ' ', item.failed, ' fallidos'),
-                          e(Text, { type: 'secondary', style: { fontSize: 12 } }, '• Último: ', item.lastSent)
-                        )
-                      )
-                    ),
-                    e(Space, null, e(Switch, { defaultChecked: item.active }), e(Tooltip, { title: 'Probar' }, e(Button, { icon: e(PlayCircleOutlined) })), e(Button, { icon: e(SettingOutlined) }))
-                  )
-                );
-              })
-            )
-          );
-        };
-
-        var renderWebhooksIn = function() {
-          return e(React.Fragment, null,
-            e('div', { style: { marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' } },
-              e('div', null,
-                e(Title, { level: 4, style: { margin: 0 } }, 'Webhooks Entrantes'),
-                e(Text, { type: 'secondary' }, 'Recibe datos de sistemas externos hacia Next')
-              ),
-              e(Button, { type: 'primary', icon: e(PlusOutlined), onClick: function() { setModalOpen('webhook-in'); } }, 'Nuevo Endpoint')
-            ),
-            e(Alert, { message: '¿Cómo funcionan los webhooks entrantes?', description: 'Crea endpoints únicos para recibir datos de tus sistemas. Puedes recibir órdenes de entrega, rutas planificadas, información de conductores, etc.', type: 'info', showIcon: true, style: { marginBottom: 24 } }),
-            e(Space, { direction: 'vertical', style: { width: '100%' }, size: 16 },
-              webhooksInData.map(function(item) {
-                return e(Card, { key: item.key, className: 'webhook-item' },
-                  e('div', { style: { display: 'flex', justifyContent: 'space-between' } },
-                    e(Space, { align: 'start' },
-                      e('div', { style: { width: 40, height: 40, background: item.iconType === 'box' ? '#fffbe6' : '#e6fffb', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 } }, getIcon(item.iconType, { color: item.iconType === 'box' ? '#faad14' : '#13c2c2' })),
-                      e('div', null,
-                        e(Text, { strong: true }, item.name),
-                        e('div', { style: { marginTop: 8 } }, e('code', { style: { fontSize: 11 } }, item.endpoint), e(Button, { type: 'text', size: 'small', icon: e(CopyOutlined), onClick: function() { message.success('Endpoint copiado'); } })),
-                        e(Space, { style: { marginTop: 8 } },
-                          e(Text, { type: 'secondary', style: { fontSize: 12 } }, e(DownloadOutlined, { style: { color: '#722ed1' } }), ' ', item.received.toLocaleString(), ' recibidos'),
-                          e(Text, { type: 'secondary', style: { fontSize: 12 } }, '• ', item.linkBy),
-                          e(Text, { type: 'secondary', style: { fontSize: 12 } }, '• Último: ', item.lastReceived)
-                        )
-                      )
-                    ),
-                    e(Space, null, e(Switch, { defaultChecked: item.active }), e(Button, { icon: e(SettingOutlined) }))
-                  )
-                );
-              })
-            )
-          );
-        };
-
-        var renderLogs = function() {
-          return e(React.Fragment, null,
-            e('div', { style: { marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' } },
-              e('div', null,
-                e(Title, { level: 4, style: { margin: 0 } }, 'Logs de Actividad'),
-                e(Text, { type: 'secondary' }, 'Historial de todas las operaciones de integración')
-              ),
-              e(Space, null,
-                e(Select, { defaultValue: 'all', style: { width: 160 }, options: [{ value: 'all', label: 'Todos los tipos' }, { value: 'api', label: 'API Requests' }, { value: 'webhook-out', label: 'Webhooks Out' }, { value: 'webhook-in', label: 'Webhooks In' }] }),
-                e(Select, { defaultValue: '1h', style: { width: 140 }, options: [{ value: '1h', label: 'Última hora' }, { value: '24h', label: 'Últimas 24h' }, { value: '7d', label: 'Últimos 7 días' }] })
-              )
-            ),
-            e(Card, { bodyStyle: { padding: 0 } }, e(Table, { columns: logsColumns, dataSource: logsData, pagination: { pageSize: 10, style: { padding: '16px' } } }))
-          );
-        };
-
-        var renderConnections = function() {
-          return e(React.Fragment, null,
-            e('div', { style: { marginBottom: 24 } },
-              e(Title, { level: 4, style: { margin: 0 } }, 'Conexiones Pre-configuradas'),
-              e(Text, { type: 'secondary' }, 'Integraciones listas para usar con un click')
-            ),
-            e(Row, { gutter: [16, 16] },
-              [
-                { name: 'Slack', desc: 'Envía alertas a canales', icon: SlackOutlined, color: '#722ed1', connected: true },
-                { name: 'Microsoft Teams', desc: 'Notificaciones en Teams', icon: SafetyCertificateOutlined, color: '#1867FF', connected: false },
-                { name: 'SAP ERP', desc: 'Sincroniza entregas', icon: null, color: '#1867FF', connected: true, text: 'SAP' },
-                { name: 'Salesforce', desc: 'Vincula con CRM', icon: CloudServerOutlined, color: '#1867FF', connected: false },
-                { name: 'Google Sheets', desc: 'Exporta a hojas', icon: DatabaseOutlined, color: '#52c41a', connected: false },
-              ].map(function(item, index) {
-                return e(Col, { span: 8, key: index },
-                  e(Card, { style: item.connected ? { border: '2px solid #52c41a' } : {} },
-                    e('div', { style: { display: 'flex', justifyContent: 'space-between', marginBottom: 16 } },
-                      e('div', { style: { width: 40, height: 40, background: item.color + '15', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: item.color, fontSize: 20 } }, item.icon ? e(item.icon) : e('span', { style: { fontWeight: 'bold', fontSize: 12 } }, item.text)),
-                      item.connected && e(Tag, { color: 'success' }, 'Conectado')
-                    ),
-                    e(Title, { level: 5, style: { margin: 0 } }, item.name),
-                    e(Text, { type: 'secondary' }, item.desc),
-                    e(Button, { block: true, style: { marginTop: 16 }, type: item.connected ? 'default' : 'primary' }, item.connected ? 'Configurar' : 'Conectar')
-                  )
-                );
-              }),
-              e(Col, { span: 8 },
-                e(Card, { style: { border: '2px dashed #d9d9d9' } },
-                  e('div', { style: { width: 40, height: 40, background: '#fafafa', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8c8c8c', fontSize: 20, marginBottom: 16 } }, e(CodeOutlined)),
-                  e(Title, { level: 5, style: { margin: 0 } }, 'Custom'),
-                  e(Text, { type: 'secondary' }, 'Usa nuestra API'),
-                  e(Button, { block: true, style: { marginTop: 16 } }, 'Ver Docs')
+                  e(Title, { level: 5, style: { margin: 0 } }, item.name),
+                  e(Text, { type: 'secondary' }, item.desc),
+                  e(Button, { block: true, style: { marginTop: 16 }, type: item.connected ? 'default' : 'primary' }, item.connected ? 'Configurar' : 'Conectar')
                 )
+              );
+            }),
+            e(Col, { span: 8 },
+              e(Card, { style: { border: '2px dashed #d9d9d9' } },
+                e('div', { style: { width: 40, height: 40, background: '#fafafa', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8c8c8c', fontSize: 20, marginBottom: 16 } }, e(CodeOutlined)),
+                e(Title, { level: 5, style: { margin: 0 } }, 'Custom'),
+                e(Text, { type: 'secondary' }, 'Usa nuestra API'),
+                e(Button, { block: true, style: { marginTop: 16 } }, 'Ver Docs')
               )
-            )
-          );
-        };
-
-        var renderContent = function() {
-          switch (activeTab) {
-            case 'overview': return renderOverview();
-            case 'api-keys': return renderApiKeys();
-            case 'webhooks-out': return renderWebhooksOut();
-            case 'webhooks-in': return renderWebhooksIn();
-            case 'connections': return renderConnections();
-            case 'logs': return renderLogs();
-            default: return renderOverview();
-          }
-        };
-
-        return e(ConfigProvider, { theme: theme },
-          e(Layout, { style: { minHeight: '100vh' } },
-            e(Sider, { width: 250, theme: 'light' },
-              e('div', { className: 'logo-container' },
-                e('div', { className: 'logo-icon' }, e(ShareAltOutlined)),
-                e('span', { style: { marginLeft: 12, fontWeight: 600, fontSize: 16 } }, 'Numaris Next')
-              ),
-              e(Menu, { mode: 'inline', selectedKeys: [activeTab], onClick: function(info) { setActiveTab(info.key); }, items: menuItems, style: { borderRight: 0, paddingTop: 8 } })
-            ),
-            e(Layout, null,
-              e(Header, { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
-                e(Breadcrumb, { items: [{ title: 'Configuración' }, { title: 'Data Sharing Hub' }] }),
-                e(Space, null,
-                  e(Button, { icon: e(QuestionCircleOutlined) }, 'Ayuda'),
-                  e(Button, { type: 'primary', icon: e(PlusOutlined), onClick: function() { setModalOpen('new-integration'); } }, 'Nueva Integración')
-                )
-              ),
-              e(Content, { style: { padding: 24, overflow: 'auto' } }, renderContent())
-            )
-          ),
-          e(Modal, { title: 'Nueva API Key', open: modalOpen === 'api-key', onCancel: function() { setModalOpen(null); }, onOk: function() { message.success('API Key creada'); setModalOpen(null); }, okText: 'Crear API Key', width: 480 },
-            e(Form, { layout: 'vertical' },
-              e(Form.Item, { label: 'Nombre', required: true }, e(Input, { placeholder: 'ej: Dashboard Power BI' })),
-              e(Form.Item, { label: 'Permisos' }, e(Space, { direction: 'vertical' }, e(Checkbox, { defaultChecked: true }, 'Leer unidades'), e(Checkbox, { defaultChecked: true }, 'Leer posiciones'), e(Checkbox, null, 'Leer eventos'))),
-              e(Form.Item, { label: 'Acceso a unidades' }, e(Select, { defaultValue: 'all', style: { width: '100%' }, options: [{ value: 'all', label: 'Todas las unidades' }, { value: 'group', label: 'Grupo específico...' }] }))
-            )
-          ),
-          e(Modal, { title: 'Nueva Integración', open: modalOpen === 'new-integration', onCancel: function() { setModalOpen(null); }, footer: null, width: 480 },
-            e(Paragraph, { type: 'secondary' }, '¿Qué tipo de integración deseas crear?'),
-            e(Space, { direction: 'vertical', style: { width: '100%' }, size: 12 },
-              [
-                { key: 'api-key', icon: KeyOutlined, color: '#1867FF', bg: '#e6f4ff', title: 'API Key', desc: 'Para que sistemas consulten datos de Next' },
-                { key: 'webhook-out', icon: ShareAltOutlined, color: '#52c41a', bg: '#f6ffed', title: 'Webhook Saliente', desc: 'Para enviar eventos a sistemas externos' },
-                { key: 'webhook-in', icon: ApiOutlined, color: '#722ed1', bg: '#f9f0ff', title: 'Webhook Entrante', desc: 'Para recibir datos de sistemas externos' },
-              ].map(function(item) {
-                return e('div', {
-                  key: item.key,
-                  onClick: function() { setModalOpen(item.key); },
-                  style: { display: 'flex', alignItems: 'center', padding: 16, border: '1px solid #d9d9d9', borderRadius: 8, cursor: 'pointer' }
-                },
-                  e('div', { style: { width: 40, height: 40, background: item.bg, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: item.color, fontSize: 18 } }, e(item.icon)),
-                  e('div', { style: { marginLeft: 16 } },
-                    e(Text, { strong: true }, item.title),
-                    e('br'),
-                    e(Text, { type: 'secondary', style: { fontSize: 13 } }, item.desc)
-                  )
-                );
-              })
             )
           )
         );
       }
 
-      var root = ReactDOM.createRoot(document.getElementById('root'));
-      root.render(e(App));
-    };
+      function renderContent() {
+        switch (activeTab) {
+          case 'overview': return renderOverview();
+          case 'api-keys': return renderApiKeys();
+          case 'webhooks-out': return renderWebhooksOut();
+          case 'webhooks-in': return renderWebhooksIn();
+          case 'connections': return renderConnections();
+          case 'logs': return renderLogs();
+          default: return renderOverview();
+        }
+      }
+
+      return e(ConfigProvider, { theme: theme },
+        e(Layout, { style: { minHeight: '100vh' } },
+          e(Sider, { width: 250, theme: 'light' },
+            e('div', { className: 'logo-container' },
+              e('div', { className: 'logo-icon' }, e(ShareAltOutlined)),
+              e('span', { style: { marginLeft: 12, fontWeight: 600, fontSize: 16 } }, 'Numaris Next')
+            ),
+            e(Menu, { mode: 'inline', selectedKeys: [activeTab], onClick: function(info) { setActiveTab(info.key); }, items: menuItems, style: { borderRight: 0, paddingTop: 8 } })
+          ),
+          e(Layout, null,
+            e(Header, { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
+              e(Breadcrumb, { items: [{ title: 'Configuración' }, { title: 'Data Sharing Hub' }] }),
+              e(Space, null,
+                e(Button, { icon: e(QuestionCircleOutlined) }, 'Ayuda'),
+                e(Button, { type: 'primary', icon: e(PlusOutlined), onClick: function() { setModalOpen('new-integration'); } }, 'Nueva Integración')
+              )
+            ),
+            e(Content, { style: { padding: 24, overflow: 'auto' } }, renderContent())
+          )
+        ),
+
+        // Modal: New Integration
+        e(Modal, { title: 'Nueva Integración', open: modalOpen === 'new-integration', onCancel: function() { setModalOpen(null); }, footer: null, width: 480 },
+          e(Paragraph, { type: 'secondary' }, '¿Qué tipo de integración deseas crear?'),
+          e(Space, { direction: 'vertical', style: { width: '100%' }, size: 12 },
+            [
+              { key: 'api-key', icon: KeyOutlined, color: '#1867FF', bg: '#e6f4ff', title: 'API Key', desc: 'Para que sistemas consulten datos de Next' },
+              { key: 'webhook-out', icon: ShareAltOutlined, color: '#52c41a', bg: '#f6ffed', title: 'Webhook Saliente', desc: 'Para enviar eventos a sistemas externos' },
+              { key: 'webhook-in', icon: ApiOutlined, color: '#722ed1', bg: '#f9f0ff', title: 'Webhook Entrante', desc: 'Para recibir datos de sistemas externos' }
+            ].map(function(item) {
+              return e('div', { key: item.key, onClick: function() { setModalOpen(item.key); }, style: { display: 'flex', alignItems: 'center', padding: 16, border: '1px solid #d9d9d9', borderRadius: 8, cursor: 'pointer' } },
+                e('div', { style: { width: 40, height: 40, background: item.bg, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: item.color, fontSize: 18 } }, e(item.icon)),
+                e('div', { style: { marginLeft: 16 } }, e(Text, { strong: true }, item.title), e('br'), e(Text, { type: 'secondary', style: { fontSize: 13 } }, item.desc))
+              );
+            })
+          )
+        ),
+
+        // Modal: New API Key
+        e(Modal, { title: 'Nueva API Key', open: modalOpen === 'api-key', onCancel: function() { setModalOpen(null); }, onOk: function() { message.success('API Key creada'); setModalOpen(null); }, okText: 'Crear API Key', width: 480 },
+          e(Form, { layout: 'vertical' },
+            e(Form.Item, { label: 'Nombre', required: true }, e(Input, { placeholder: 'ej: Dashboard Power BI' })),
+            e(Form.Item, { label: 'Permisos' }, e(Space, { direction: 'vertical' }, e(Checkbox, { defaultChecked: true }, 'Leer unidades'), e(Checkbox, { defaultChecked: true }, 'Leer posiciones'), e(Checkbox, null, 'Leer eventos'), e(Checkbox, null, 'Leer historial'), e(Checkbox, null, 'Enviar comandos'))),
+            e(Form.Item, { label: 'Acceso a unidades' }, e(Select, { defaultValue: 'all', options: [{ value: 'all', label: 'Todas las unidades' }, { value: 'group', label: 'Grupo específico...' }, { value: 'units', label: 'Unidades específicas...' }] })),
+            e(Form.Item, { label: 'Expiración' }, e(Select, { defaultValue: 'never', options: [{ value: 'never', label: 'Sin expiración' }, { value: '30d', label: '30 días' }, { value: '90d', label: '90 días' }, { value: '1y', label: '1 año' }] }))
+          )
+        ),
+
+        // Modal: New Webhook Out (con HMAC y reintentos)
+        e(Modal, { title: 'Nuevo Webhook Saliente', open: modalOpen === 'webhook-out', onCancel: function() { setModalOpen(null); setUrlError(''); }, onOk: function() { if (!urlError) { message.success('Webhook creado'); setModalOpen(null); } }, okText: 'Crear Webhook', width: 560 },
+          e(Form, { layout: 'vertical' },
+            e(Form.Item, { label: 'Nombre', required: true }, e(Input, { placeholder: 'ej: Alertas → Slack' })),
+            e(Form.Item, { label: 'URL de destino (HTTPS)', required: true, validateStatus: urlError ? 'error' : '', help: urlError },
+              e(Input, { placeholder: 'https://...', onChange: function(ev) { setUrlError(validateUrl(ev.target.value)); } })
+            ),
+            e(Form.Item, { label: 'Eventos a enviar' },
+              e(Row, { gutter: [8, 8] }, ['position_update', 'panic_button', 'speeding', 'zone_entry', 'zone_exit', 'ignition_change'].map(function(event) {
+                return e(Col, { span: 12, key: event }, e(Checkbox, { defaultChecked: event === 'panic_button' || event === 'speeding' }, event));
+              }))
+            ),
+            e(Form.Item, { label: 'Filtrar por unidades' }, e(Select, { defaultValue: 'all', options: [{ value: 'all', label: 'Todas las unidades' }, { value: 'group', label: 'Grupo específico...' }] })),
+            e(Divider),
+            e(Title, { level: 5 }, 'Seguridad'),
+            e(Form.Item, { label: 'Firma HMAC-SHA256' },
+              e(Space, { direction: 'vertical', style: { width: '100%' } },
+                e(Checkbox, { defaultChecked: true }, 'Habilitar firma HMAC'),
+                e(Alert, { message: 'El secreto HMAC se generará automáticamente y se mostrará una sola vez al crear el webhook.', type: 'info', showIcon: true, style: { marginTop: 8 } })
+              )
+            ),
+            e(Divider),
+            e(Title, { level: 5 }, 'Reintentos'),
+            e(Form.Item, { label: 'Política de reintentos' },
+              e(Space, null,
+                e(Select, { defaultValue: '3', style: { width: 120 }, options: [{ value: '0', label: 'Sin reintentos' }, { value: '3', label: '3 reintentos' }, { value: '5', label: '5 reintentos' }, { value: '10', label: '10 reintentos' }] }),
+                e(Text, { type: 'secondary' }, 'con backoff exponencial (1s, 5s, 30s...)')
+              )
+            )
+          )
+        ),
+
+        // Modal: New Webhook In (con secreto)
+        e(Modal, { title: 'Nuevo Webhook Entrante', open: modalOpen === 'webhook-in', onCancel: function() { setModalOpen(null); }, onOk: function() { message.success('Endpoint creado'); setModalOpen(null); }, okText: 'Crear Endpoint', width: 520 },
+          e(Form, { layout: 'vertical' },
+            e(Form.Item, { label: 'Nombre', required: true }, e(Input, { placeholder: 'ej: Órdenes de SAP' })),
+            e(Form.Item, { label: 'Tipo de datos a recibir' }, e(Select, { defaultValue: 'orders', options: [{ value: 'orders', label: 'Órdenes de entrega' }, { value: 'routes', label: 'Rutas planificadas' }, { value: 'drivers', label: 'Información de conductores' }, { value: 'cargo', label: 'Datos de carga' }, { value: 'custom', label: 'Custom (JSON libre)' }] })),
+            e(Form.Item, { label: 'Vincular con unidad por' }, e(Select, { defaultValue: 'plate', options: [{ value: 'plate', label: 'Placa del vehículo' }, { value: 'id', label: 'ID de unidad' }, { value: 'economic', label: 'Número económico' }, { value: 'imei', label: 'IMEI del dispositivo' }] })),
+            e(Alert, { message: 'Tu endpoint será:', description: e('code', null, 'https://api.next.numaris.com/webhook/in/[id]'), type: 'info', style: { marginTop: 8 } }),
+            e(Alert, { message: 'Secreto de verificación', description: 'Se generará un secreto HMAC que podrás usar para verificar que las requests provienen de Next. Se mostrará una sola vez al crear el endpoint.', type: 'warning', showIcon: true, icon: e(LockOutlined), style: { marginTop: 16 } })
+          )
+        )
+      );
+    }
+
+    var root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(e(App));
   </script>
 </body>
 </html>

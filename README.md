@@ -1,49 +1,41 @@
 # NEXT-60: Data Sharing Hub
 
-Prototipo interactivo del módulo de Data Sharing para la plataforma Next de Numaris.
+Prototipo interactivo para el feature de Data Sharing de la plataforma Numaris Next.
 
-## 🚀 Ver el prototipo
+## 🚀 Ver en Replit
 
-### Opción 1: Replit (recomendado)
-1. Importa este repo en [Replit](https://replit.com)
-2. Click en **Run**
-3. El prototipo se abre automáticamente
-
-### Opción 2: Local
-```bash
-# Con Python
-cd prototype
-python3 -m http.server 8080
-# Abre http://localhost:8080
-
-# Con Node
-npx serve prototype
-```
+Importa este repo en Replit y abre `prototype/index.html`.
 
 ## 📁 Estructura
 
 ```
 ├── README.md           # Este archivo
-├── PRD.html            # Documento de Producto (PRD)
+├── PRD.html            # Documento de requisitos del producto
 └── prototype/
-    └── index.html      # Prototipo interactivo
+    └── index.html      # Prototipo interactivo (self-contained)
 ```
 
-## 🎨 Stack del prototipo
-
-- **React 18** - UI Library
-- **Ant Design 5.20.6** - Component library
-- **Source Sans 3** - Tipografía Numaris
-
-## 📋 Feature
+## 🎯 Feature Overview
 
 **Data Sharing** permite a los clientes de Next compartir datos de su flota con sistemas externos:
 
-- **API Keys** - Acceso programático a datos
-- **Webhooks Salientes** - Push de eventos a sistemas externos
-- **Webhooks Entrantes** - Recibir datos de ERPs/TMS
-- **Conexiones** - Integraciones pre-configuradas (Slack, SAP, etc.)
+- **API Keys** - Acceso programático con permisos granulares
+- **Webhooks Salientes** - Push de eventos a sistemas externos (con HMAC y reintentos)
+- **Webhooks Entrantes** - Recepción de datos desde ERPs, TMS, etc.
+
+## 🛠️ Stack del Prototipo
+
+- React 18 (UMD)
+- Ant Design 5.20.6
+- Day.js
+- JavaScript puro (sin build step)
+- Tipografía: Source Sans 3
+
+## 📋 Ticket
+
+- **Jira:** NEXT-60
+- **Estado:** Prototipo aprobado por PO ✅
 
 ---
 
-*Generado para Numaris Next - 2026*
+*Generado por Jimmy - Asistente de David Barba, CTO Numaris*
