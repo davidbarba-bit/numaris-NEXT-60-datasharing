@@ -1,0 +1,39 @@
+{
+  "project": "NEXT-60 Data Sharing Hub",
+  "agentTeams": {
+    "enabled": true,
+    "agentsFile": "AGENTS.md",
+    "roles": [
+      {
+        "id": "po",
+        "name": "Product Owner",
+        "shortName": "PO",
+        "description": "Define PRD, alcance y aprueba flujos"
+      },
+      {
+        "id": "qa",
+        "name": "QA",
+        "shortName": "QA",
+        "description": "Valida flujos, happy paths y edge cases"
+      },
+      {
+        "id": "ux-ui",
+        "name": "UX/UI Designer",
+        "shortName": "UX/UI",
+        "description": "Diseña pantallas y flujos de interacción"
+      },
+      {
+        "id": "frontend",
+        "name": "Frontend Developer",
+        "shortName": "Frontend",
+        "description": "Implementa el prototipo React"
+      },
+      {
+        "id": "backend",
+        "name": "Backend / Architecture Reviewer",
+        "shortName": "Backend",
+        "description": "Revisa factibilidad técnica y arquitectura"
+      }
+    ]
+  }
+}
