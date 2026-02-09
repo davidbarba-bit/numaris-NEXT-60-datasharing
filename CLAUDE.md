@@ -8,6 +8,7 @@ Permite a clientes compartir datos de flota con sistemas externos via API Keys, 
 ```
 ├── CLAUDE.md              # Este archivo (instrucciones para Claude)
 ├── AGENTS.md              # Definición de roles del equipo (PO, QA, UX/UI, Frontend, Backend)
+├── DESIGN_SYSTEM.md       # Design System completo: tokens, componentes, patrones CSS
 ├── PRD.html               # Documento de requisitos del producto (fuente de verdad)
 ├── README.md              # Descripción general del proyecto
 └── prototype/

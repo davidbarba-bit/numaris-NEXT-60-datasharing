@@ -122,17 +122,24 @@ Cuando actúes como QA:
 - Proponer mejoras de UX con justificación
 
 ### Design System - Numaris Next
+
+> **Referencia completa:** Ver `DESIGN_SYSTEM.md` para tokens CSS, componentes, patrones y estilos detallados.
+
 ```
 Colores:
   --primary: #1867FF (azul Numaris)
-  --primary-dark: #2f54eb
+  --primary-dark: #2f54eb (botones primarios)
+  --primary-light: #d6e4ff (tags seleccionados)
   --text-primary: #3F3F3F
-  --text-secondary: #666666
+  --text-secondary: #8c8c8c
   --bg-page: #f0f2f5
   --bg-header: #FAFAFA
-  --success: #52c41a
-  --warning: #faad14
-  --error: #ff4d4f
+  --border-light: #f0f0f0
+  --border-default: #d9d9d9
+  --success: #52c41a / bg: #f6ffed
+  --warning: #faad14 / bg: #fffbe6
+  --error: #ff4d4f / bg: #fff1f0
+  --inactive: #8c8c8c / bg: #f5f5f5
 
 Tipografía: Source Sans 3 (400, 500, 600, 700)
 Border Radius: 8px (general), 12px (cards)
